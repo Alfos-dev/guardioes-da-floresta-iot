@@ -1,0 +1,252 @@
+[
+  {
+    "date": "2026-01-03",
+    "time": "07:04",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-01-10",
+    "time": "12:49",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-01-18",
+    "time": "16:53",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-01-26",
+    "time": "01:48",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-02-01",
+    "time": "19:10",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-02-09",
+    "time": "09:44",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-02-17",
+    "time": "09:03",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-02-24",
+    "time": "09:28",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-03-03",
+    "time": "08:39",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-03-11",
+    "time": "06:41",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-03-18",
+    "time": "22:26",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-03-25",
+    "time": "16:19",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-04-01",
+    "time": "23:13",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-04-10",
+    "time": "01:55",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-04-17",
+    "time": "08:54",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-04-23",
+    "time": "23:33",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-05-01",
+    "time": "14:24",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-05-09",
+    "time": "18:13",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-05-16",
+    "time": "17:03",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-05-23",
+    "time": "08:12",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-05-31",
+    "time": "05:46",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-06-08",
+    "time": "07:03",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-06-14",
+    "time": "23:56",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-06-21",
+    "time": "18:55",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-06-29",
+    "time": "20:58",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-07-07",
+    "time": "16:30",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-07-14",
+    "time": "06:45",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-07-21",
+    "time": "08:05",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-07-29",
+    "time": "11:37",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-08-05",
+    "time": "23:22",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-08-12",
+    "time": "14:37",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-08-19",
+    "time": "23:46",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-08-28",
+    "time": "01:19",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-09-04",
+    "time": "04:52",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-09-11",
+    "time": "00:27",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-09-18",
+    "time": "17:44",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-09-26",
+    "time": "13:50",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-10-03",
+    "time": "10:26",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-10-10",
+    "time": "12:50",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-10-18",
+    "time": "13:13",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-10-26",
+    "time": "01:13",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-11-01",
+    "time": "17:30",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-11-09",
+    "time": "04:02",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-11-17",
+    "time": "08:48",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-11-24",
+    "time": "11:55",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-12-01",
+    "time": "03:10",
+    "phase": "Lua Minguante"
+  },
+  {
+    "date": "2026-12-08",
+    "time": "21:52",
+    "phase": "Lua Nova"
+  },
+  {
+    "date": "2026-12-17",
+    "time": "02:43",
+    "phase": "Lua Crescente"
+  },
+  {
+    "date": "2026-12-23",
+    "time": "22:29",
+    "phase": "Lua Cheia"
+  },
+  {
+    "date": "2026-12-30",
+    "time": "16:00",
+    "phase": "Lua Minguante"
+  }
+]
