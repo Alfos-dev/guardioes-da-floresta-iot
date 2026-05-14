@@ -1,0 +1,12 @@
+# Secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# OS/editor
+.DS_Store
+*.swp
+*.swo
