@@ -103,8 +103,8 @@ graph TD
         B_GND[GND] -- GND --> B
     end
 
-    subgraph Solo_Analogico [Sensor de Umidade do Solo - Analógico]
-        C_AOUT[GPIO 4 (ADC)] -- AOUT --> C
+    subgraph Solo_Analogico [Sensor de Umidade do Solo - Analogico]
+        C_AOUT[GPIO 4 ADC] -- AOUT --> C
         C_VCC[3.3V] -- VCC --> C
         C_GND[GND] -- GND --> C
     end
