@@ -5,14 +5,14 @@ import serial
 from influxdb_client import InfluxDBClient, Point
 from influxdb_client.client.write_api import SYNCHRONOUS
 
-SERIAL_PORT = os.getenv("SERIAL_PORT", "/dev/ttyUSB0")
-BAUD        = int(os.getenv("BAUD", "115200"))
-INFLUX_URL  = os.getenv("INFLUX_URL", "http://influxdb:8086")
-INFLUX_TOKEN = os.getenv("INFLUX_TOKEN", "meu-token-influx")
-INFLUX_ORG  = os.getenv("INFLUX_ORG", "ads")
+SERIAL_PORT   = os.getenv("SERIAL_PORT",   "/dev/ttyUSB0")
+BAUD          = int(os.getenv("BAUD",      "115200"))
+INFLUX_URL    = os.getenv("INFLUX_URL",    "http://influxdb:8086")
+INFLUX_TOKEN  = os.getenv("INFLUX_TOKEN",  "meu-token-influx")
+INFLUX_ORG    = os.getenv("INFLUX_ORG",    "ads")
 INFLUX_BUCKET = os.getenv("INFLUX_BUCKET", "monitoramento")
 
-client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
+client    = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
 write_api = client.write_api(write_options=SYNCHRONOUS)
 
 while True:
@@ -24,19 +24,20 @@ while True:
                 if not line:
                     continue
                 try:
-                    data = json.loads(line)
+                    data  = json.loads(line)
                     point = (
                         Point("sensor_data")
                         .tag("device_id", data.get("device_id", "esp32_1"))
+                        .field("seq",      int(data["seq"]))
                         .field("t",        float(data["t"]))
                         .field("ha",       float(data["ha"]))
                         .field("s",        float(data["s"]))
                         .field("soil_raw", int(data["soil_raw"]))
                     )
                     write_api.write(bucket=INFLUX_BUCKET, record=point)
-                    print("[ok] Gravado:", data)
+                    print(f"[ok] seq={data['seq']} t={data['t']} ha={data['ha']} s={data['s']} soil={data['soil_raw']}")
                 except Exception as e:
-                    print("[erro]", e)
+                    print(f"[erro json] {e} | linha: {line}")
     except Exception as e:
-        print("[serial offline]", e)
+        print(f"[serial offline] {e}")
         time.sleep(3)

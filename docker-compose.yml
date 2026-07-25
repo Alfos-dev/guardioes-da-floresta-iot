@@ -33,6 +33,7 @@ services:
     container_name: serial_bridge
     restart: unless-stopped
     environment:
+      PYTHONUNBUFFERED: "1"
       SERIAL_PORT: /dev/ttyUSB0
       BAUD: 115200
       INFLUX_URL: ${INFLUX_URL}
@@ -49,6 +50,7 @@ services:
     container_name: moon_service
     restart: unless-stopped
     environment:
+      PYTHONUNBUFFERED: "1"
       INFLUX_URL: ${INFLUX_URL}
       INFLUX_TOKEN: ${INFLUX_TOKEN}
       INFLUX_ORG: ${INFLUX_ORG}
