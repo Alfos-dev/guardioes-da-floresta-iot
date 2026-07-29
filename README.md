@@ -39,8 +39,8 @@ O sistema **Guardiões da Floresta** opera de forma autônoma e local, garantind
 **Fluxo de Dados:**
 1.  **Coleta**: O microcontrolador ESP32-S3 coleta dados ambientais dos sensores AHT10 e de solo.
 2.  **Transmissão**: Os dados são formatados em JSON e enviados via Serial USB para o servidor.
-3.  **Processamento**: O script `serial_to_influx.py` lê a serial e armazena os dados no InfluxDB.
-4.  **Serviço Lunar**: O script `moon_from_json.py` insere as fases da lua no InfluxDB.
+3.  **Processamento**: O script `bridge/serial_bridge.py` lê a serial e armazena os dados no InfluxDB.
+4.  **Serviço Lunar**: O script `moon/moon_service.py` calcula a fase da lua em tempo real e a insere no InfluxDB.
 5.  **Visualização**: O Grafana consome os dados do InfluxDB e os exibe no dashboard via Wi-Fi local.
 
 ---
@@ -55,8 +55,8 @@ Este projeto integra diversas tecnologias para criar uma solução robusta e de 
 | **Hardware** | AHT10 | Sensor de temperatura e umidade do ar |
 | **Hardware** | Sensor Capacitivo | Medição de umidade do solo sem corrosão |
 | **Firmware** | C++ PlatformIO | Código embarcado para leitura e envio serial |
-| **Bridge Serial** | Python 3 | Script serial_to_influx para ponte de dados |
-| **Serviço Lunar** | Python 3 | Script moon_from_json para dados lunares |
+| **Bridge Serial** | Python 3 | Script `bridge/serial_bridge.py` para ponte de dados |
+| **Serviço Lunar** | Python 3 (ephem) | Script `moon/moon_service.py` para cálculo da fase lunar |
 | **Banco de Dados** | InfluxDB 2.7 | Armazenamento de séries temporais |
 | **Visualização** | Grafana | Dashboard interativo para visualização |
 | **Infraestrutura** | Docker Compose | Orquestração de serviços em contêineres |
@@ -164,8 +164,8 @@ O firmware é desenvolvido no PlatformIO.
 
 ## 6. Scripts de Integração Python
 
-*   **serial_to_influx.py**: Lê a porta serial (ex: `/dev/ttyUSB0`) e envia os dados para o InfluxDB.
-*   **moon_from_json.py**: Consulta o `calendario_lunar_2026.json` e envia a fase da lua atual para o InfluxDB a cada minuto.
+*   **bridge/serial_bridge.py**: Lê a porta serial (ex: `/dev/ttyUSB0`) e envia os dados para o InfluxDB.
+*   **moon/moon_service.py**: Calcula a fase da lua atual em tempo real (via biblioteca `ephem`) e envia o resultado para o InfluxDB a cada hora.
 
 ---
 
@@ -175,7 +175,7 @@ Os dados são armazenados no bucket `monitoramento`.
 
 ### Estrutura no InfluxDB
 *   **sensor_data**: Campos `t` (Temp), `ha` (Umidade Ar), `s` (Umidade Solo), `soil_raw` (ADC Bruto).
-*   **moon_data**: Campo `phase` (Fase da Lua).
+*   **moon_data**: Campos `phase` (Fase da Lua), `illumination` (% de Iluminação) e `age_days` (Idade da Lua em dias); tag `location`.
 
 ### Exemplos de Queries (Grafana)
 *   **Última Umidade do Solo**:
