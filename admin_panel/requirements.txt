@@ -6,3 +6,5 @@ python-multipart>=0.0.9
 pyjwt>=2.9.0
 passlib>=1.7.4
 python-dotenv>=1.0.0
+esptool>=4.7.0
+pyserial>=3.5

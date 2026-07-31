@@ -419,6 +419,26 @@ window.addEventListener('DOMContentLoaded', () => {
 let sensorsCatalog = [];
 let selectedSensors = [];
 
+// Helpers de compatibilidade usados pelas seções de Firmware/Flash.
+// Reutilizam o utilitário request() (que trata auth, 401 e erros).
+function getToken() {
+    return authToken || localStorage.getItem('auth_token');
+}
+
+function showError(message) {
+    alert(message);
+}
+
+async function apiRequest(path, method = 'GET', body = null) {
+    const options = { method };
+    if (body !== null && body !== undefined) {
+        options.body = JSON.stringify(body);
+    }
+    // request() prefixa API_BASE (/api); remove o prefixo se já vier no path.
+    const endpoint = path.startsWith('/api') ? path.slice(4) : path;
+    return request(endpoint, options);
+}
+
 // Carrega catálogo de sensores
 async function loadSensorsCatalog() {
     try {
@@ -563,6 +583,9 @@ function renderBuilds(builds) {
                     <button class="btn-download" onclick="downloadFirmware('${build.build_id}', '${build.firmware_file}')">
                         ⬇️ Download
                     </button>
+                    <button class="btn-flash" onclick="openFlashPanel('${build.build_id}', '${build.device_id}')">
+                        Gravar
+                    </button>
                 </div>
             </div>
         `;
@@ -613,3 +636,150 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
         }
     });
 });
+
+
+// ===== FASE 6: Gravação de Firmware (Flash) =====
+
+let currentFlashBuildId = null;
+let flashPollTimer = null;
+
+// Atualiza a lista de portas seriais disponíveis
+async function refreshPorts() {
+    const select = document.getElementById('flash-port');
+    if (!select) return;
+
+    select.innerHTML = '<option value="">Carregando portas...</option>';
+
+    try {
+        const response = await apiRequest('/api/flash/ports');
+        const ports = response.ports || [];
+
+        if (ports.length === 0) {
+            select.innerHTML = '<option value="">Nenhuma porta serial detectada</option>';
+            return;
+        }
+
+        select.innerHTML = ports.map(p =>
+            `<option value="${p.port}">${p.port} — ${p.description}</option>`
+        ).join('');
+    } catch (error) {
+        select.innerHTML = '<option value="">Erro ao listar portas</option>';
+        showError('Erro ao listar portas seriais: ' + error.message);
+    }
+}
+
+// Abre o painel de gravação para um build específico
+async function openFlashPanel(buildId, deviceId) {
+    currentFlashBuildId = buildId;
+
+    const panel = document.getElementById('flash-panel');
+    const progressArea = document.getElementById('flash-progress-area');
+    const label = document.getElementById('flash-build-label');
+
+    stopFlashPolling();
+    panel.classList.remove('hidden');
+    progressArea.classList.add('hidden');
+    label.textContent = `${buildId} (device: ${deviceId})`;
+
+    await refreshPorts();
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// Inicia a gravação do firmware
+async function startFlash() {
+    const port = document.getElementById('flash-port').value;
+    const baud = parseInt(document.getElementById('flash-baud').value, 10);
+    const startBtn = document.getElementById('start-flash-btn');
+
+    if (!currentFlashBuildId) {
+        showError('Nenhum build selecionado');
+        return;
+    }
+    if (!port) {
+        showError('Selecione uma porta serial');
+        return;
+    }
+
+    // Prepara a área de progresso
+    const progressArea = document.getElementById('flash-progress-area');
+    const progressBar = document.getElementById('flash-progress-bar');
+    const progressPct = document.getElementById('flash-progress-pct');
+    const logEl = document.getElementById('flash-log');
+
+    progressArea.classList.remove('hidden');
+    progressBar.style.width = '0%';
+    progressPct.textContent = '0%';
+    logEl.textContent = '';
+    startBtn.disabled = true;
+
+    try {
+        const response = await apiRequest('/api/flash/start', 'POST', {
+            build_id: currentFlashBuildId,
+            port: port,
+            baud: baud
+        });
+
+        // Inicia o polling do status a cada 2 segundos
+        stopFlashPolling();
+        flashPollTimer = setInterval(() => pollFlashStatus(response.flash_id), 2000);
+        // Primeira consulta imediata
+        pollFlashStatus(response.flash_id);
+    } catch (error) {
+        startBtn.disabled = false;
+        showError('Erro ao iniciar gravação: ' + error.message);
+    }
+}
+
+// Consulta o status de um trabalho de gravação (polling)
+async function pollFlashStatus(flashId) {
+    const progressBar = document.getElementById('flash-progress-bar');
+    const progressPct = document.getElementById('flash-progress-pct');
+    const logEl = document.getElementById('flash-log');
+    const startBtn = document.getElementById('start-flash-btn');
+
+    try {
+        const job = await apiRequest(`/api/flash/status/${flashId}`);
+
+        // Atualiza barra de progresso
+        progressBar.style.width = `${job.progress}%`;
+        progressPct.textContent = `${job.progress}%`;
+
+        // Atualiza log e faz auto-scroll
+        logEl.textContent = (job.log_lines || []).join('\n');
+        logEl.scrollTop = logEl.scrollHeight;
+
+        if (job.status === 'success') {
+            stopFlashPolling();
+            startBtn.disabled = false;
+            progressPct.textContent = '100% — Gravação concluída com sucesso!';
+        } else if (job.status === 'error') {
+            stopFlashPolling();
+            startBtn.disabled = false;
+            progressPct.textContent = `Erro: ${job.error || 'gravação falhou'}`;
+        }
+    } catch (error) {
+        stopFlashPolling();
+        startBtn.disabled = false;
+        showError('Erro ao consultar status da gravação: ' + error.message);
+    }
+}
+
+// Fecha o painel de gravação
+function closeFlashPanel() {
+    const panel = document.getElementById('flash-panel');
+    panel.classList.add('hidden');
+    stopFlashPolling();
+    currentFlashBuildId = null;
+}
+
+// Para o polling do status
+function stopFlashPolling() {
+    if (flashPollTimer) {
+        clearInterval(flashPollTimer);
+        flashPollTimer = null;
+    }
+}
+
+// Event listener do botão "Iniciar Gravação"
+document.getElementById('start-flash-btn')?.addEventListener('click', startFlash);

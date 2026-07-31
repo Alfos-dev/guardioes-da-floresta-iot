@@ -21,6 +21,7 @@ RUN pip install --no-cache-dir platformio
 COPY main.py .
 COPY sensor_catalog.py .
 COPY firmware_builder.py .
+COPY flash_service.py .
 COPY static/ static/
 
 # Volume para persistência do SQLite e builds
