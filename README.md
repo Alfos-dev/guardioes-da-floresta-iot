@@ -6,7 +6,72 @@ A proposta é oferecer ao pequeno agricultor uma ferramenta acessível e confiá
 
 ---
 
-## 1. Arquitetura do Sistema
+## 🚧 v2.0 — Em desenvolvimento (Fase 1 concluída)
+
+A **v2.0** evolui o sistema para uma arquitetura **MQTT-first**, na qual todo transporte (serial e Wi-Fi) passa primeiro pelo broker MQTT e um único serviço (`ingest_service`) normaliza e grava os dados. A v1.0 descrita abaixo continua **100% funcional e não foi alterada** — a v2.0 coexiste em paralelo.
+
+### O que a Fase 1 entrega
+
+| Componente | Local | Descrição |
+| :--- | :--- | :--- |
+| **Firmware v2** | `firmware-v2/` | Projeto PlatformIO para ESP32-S3, modular em 3 camadas (config NVS / sensores / transporte MQTT), com provisionamento via portal cativo |
+| **Broker MQTT** | `services/mosquitto/` | Mosquitto 2.x com autenticação usuário/senha e mensagens retained |
+| **ingest_service** | `services/ingest_service/` | Assina `guardioes/+/telemetry` e `guardioes/+/status`, valida o schema genérico, grava no InfluxDB e mantém o registro de dispositivos no SQLite (auto-discovery) |
+| **serial_bridge (atualizado)** | `bridge/` | Deixou de escrever no InfluxDB; agora converte a serial para o schema genérico e **publica no MQTT** (mantém compatibilidade com o payload v1) |
+
+### Nova arquitetura (v2.0)
+
+```
+ESP32-S3 (USB) --serial--> serial_bridge --+
+                                            +--> Mosquitto (MQTT) --> ingest_service --+--> InfluxDB --> Grafana
+ESP32/ESP8266 (Wi-Fi) -----MQTT------------+                                          +--> SQLite (registro de dispositivos)
+```
+
+### Schema genérico de telemetria
+
+```json
+{
+  "device_id": "esp32s3_01",
+  "timestamp": "2026-07-30T14:00:00Z",
+  "readings": [
+    { "sensor": "soil_moisture", "value": 42,   "unit": "%" },
+    { "sensor": "air_temp",      "value": 27.4, "unit": "C" }
+  ]
+}
+```
+
+### Tópicos MQTT
+
+| Tópico | Direção | Descrição |
+| :--- | :--- | :--- |
+| `guardioes/{device_id}/telemetry` | dispositivo → servidor | Telemetria (QoS 1) |
+| `guardioes/{device_id}/config` | servidor → dispositivo | Configuração/calibração (retained, QoS 1) |
+| `guardioes/{device_id}/status` | dispositivo → servidor | Heartbeat `{"online": true}` a cada 30s |
+
+### Como subir a stack v2
+
+```bash
+cp .env.example .env          # defina MQTT_USER / MQTT_PASS e tokens
+# gera o arquivo de senha do Mosquitto a partir das credenciais do .env
+MQTT_USER=guardioes MQTT_PASS="sua-senha" bash services/mosquitto/gen-passwd.sh
+docker compose up -d --build  # sobe influxdb, grafana, mosquitto, ingest_service, serial_bridge, moon_service
+```
+
+### Compilar/gravar o firmware v2 (offline)
+
+```bash
+cd firmware-v2
+pio run -e esp32s3_v2            # compila (offline após o primeiro cache de libs)
+pio run -e esp32s3_v2 -t upload  # grava no ESP32-S3
+```
+
+> Na primeira inicialização com a NVS vazia, o dispositivo sobe um Wi-Fi `Guardioes-Setup` (192.168.4.1) com um portal para configurar Wi-Fi, broker MQTT e `device_id`.
+
+> **Roadmap:** Fase 2 (instalador `curl`), Fase 3 (painel de administração), Fase 4 (firmware multi-placa), Fase 5 (flash pelo navegador). Ver `proposta-tecnica-v2.md`.
+
+---
+
+## 1. Arquitetura do Sistema (v1.0)
 
 O sistema **Guardiões da Floresta** opera de forma autônoma e local, garantindo o monitoramento contínuo das condições ambientais sem a necessidade de conexão com a internet. A arquitetura é modular e baseada em contêineres Docker, facilitando a implantação e o gerenciamento.
 

@@ -1,3 +1,2 @@
 pyserial
-requests
-influxdb-client
+paho-mqtt>=2.0

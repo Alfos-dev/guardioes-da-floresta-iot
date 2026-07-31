@@ -28,6 +28,40 @@ services:
     environment:
       - GF_PANELS_DISABLE_SANITIZE_HTML=true
 
+  # ---- v2: MQTT broker (single ingestion transport) ----
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: mosquitto
+    restart: unless-stopped
+    ports:
+      - "1883:1883"
+    volumes:
+      - ./services/mosquitto:/mosquitto/config
+      - mosquitto_data:/mosquitto/data
+
+  # ---- v2: single ingestion service (MQTT -> InfluxDB + SQLite) ----
+  ingest_service:
+    build: ./services/ingest_service
+    container_name: ingest_service
+    restart: unless-stopped
+    environment:
+      PYTHONUNBUFFERED: "1"
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASS: ${MQTT_PASS}
+      INFLUX_URL: ${INFLUX_URL}
+      INFLUX_TOKEN: ${INFLUX_TOKEN}
+      INFLUX_ORG: ${INFLUX_ORG}
+      INFLUX_BUCKET: ${INFLUX_BUCKET}
+      SQLITE_PATH: /data/devices.db
+    volumes:
+      - devices_data:/data
+    depends_on:
+      - mosquitto
+      - influxdb
+
+  # ---- v2: serial bridge now publishes to MQTT (no longer writes to InfluxDB) ----
   serial_bridge:
     build: ./bridge
     container_name: serial_bridge
@@ -35,15 +69,16 @@ services:
     environment:
       PYTHONUNBUFFERED: "1"
       SERIAL_PORT: /dev/ttyUSB0
-      BAUD: 115200
-      INFLUX_URL: ${INFLUX_URL}
-      INFLUX_TOKEN: ${INFLUX_TOKEN}
-      INFLUX_ORG: ${INFLUX_ORG}
-      INFLUX_BUCKET: ${INFLUX_BUCKET}
+      BAUD: "115200"
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASS: ${MQTT_PASS}
+      DEVICE_ID: ${SERIAL_DEVICE_ID:-esp32s3_serial}
     devices:
       - "/dev/ttyUSB0:/dev/ttyUSB0"
     depends_on:
-      - influxdb
+      - mosquitto
 
   moon_service:
     build: ./moon
@@ -61,3 +96,5 @@ services:
 volumes:
   influxdb_data:
   grafana_data:
+  mosquitto_data:
+  devices_data:
