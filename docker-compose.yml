@@ -93,6 +93,33 @@ services:
     depends_on:
       - influxdb
 
+  # ---- v2 Fase 3: Painel de Administração Web ----
+  admin_panel:
+    build: ./admin_panel
+    container_name: admin_panel
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      PYTHONUNBUFFERED: "1"
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MQTT_USER: ${MQTT_USER}
+      MQTT_PASS: ${MQTT_PASS}
+      INFLUX_URL: ${INFLUX_URL}
+      INFLUXDB_ADMIN_TOKEN: ${INFLUX_TOKEN}
+      INFLUXDB_ORG: ${INFLUX_ORG}
+      INFLUXDB_BUCKET: ${INFLUX_BUCKET}
+      SQLITE_PATH: /data/devices.db
+    volumes:
+      - devices_data:/data
+    depends_on:
+      - mosquitto
+      - influxdb
+      - ingest_service
+
 volumes:
   influxdb_data:
   grafana_data:
