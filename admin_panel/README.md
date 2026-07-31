@@ -23,6 +23,15 @@ Interface web para gerenciamento de dispositivos IoT e visualização de dados e
 - **Formatação automática**: Conversão de nomes de sensores para português
 - **Organização por tempo**: Ordenação das leituras mais recentes primeiro
 
+### Dashboard de Dados em Tempo Real (Fase 5)
+- **Aba Dashboard**: Nova visão dedicada à visualização de dados dos dispositivos
+- **Lista lateral de dispositivos**: Sidebar com todos os dispositivos e indicador de status online/offline
+- **Cards de métricas instantâneas**: Últimos valores de temperatura do ar, umidade do ar e umidade do solo, com ícone e unidade
+- **Gráficos de séries temporais**: Três gráficos de linha (temperatura do ar, umidade do ar, umidade do solo) renderizados com Chart.js
+- **Seletor de período**: Botões 1h / 6h / 24h / 7d que reajustam a janela de agregação dos dados
+- **Auto-refresh**: Atualização automática dos cards e gráficos a cada 30 segundos
+- **Chart.js local**: Biblioteca servida localmente (`static/chart.min.js`), sem dependência de CDN, mantendo o funcionamento offline
+
 ### 🆕 Firmware Builder (Fase 4)
 - **Catálogo de sensores**: Biblioteca de sensores suportados (AHT10, Solo, DHT22, LDR)
 - **Seleção de sensores**: Interface visual para escolher quais sensores incluir no dispositivo
@@ -65,7 +74,8 @@ admin_panel/
 ├── static/             # Frontend
 │   ├── index.html     # Interface principal
 │   ├── style.css      # Estilos
-│   └── app.js         # Lógica JavaScript
+│   ├── app.js         # Lógica JavaScript
+│   └── chart.min.js   # Chart.js 4.x local (dashboard - Fase 5)
 └── README.md          # Este arquivo
 ```
 
@@ -87,6 +97,10 @@ admin_panel/
 ### Dados
 - `GET /api/devices/{device_id}/data/latest` - Últimas leituras (5 min)
 - `GET /api/devices/{device_id}/data/history?start=-24h` - Histórico
+
+### Dashboard (Fase 5)
+- `GET /api/dashboard/overview` - Visão geral de todos os dispositivos com última leitura e status online/offline
+- `GET /api/devices/{device_id}/data/chart?sensors=...&start=-24h&window=10m` - Séries temporais agregadas formatadas para Chart.js (labels + datasets por sensor)
 
 ### 🆕 Sensores e Firmware (Fase 4)
 - `GET /api/sensors` - Listar todos os sensores do catálogo
