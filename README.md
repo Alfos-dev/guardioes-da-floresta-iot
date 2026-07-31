@@ -48,7 +48,24 @@ ESP32/ESP8266 (Wi-Fi) -----MQTT------------+                                    
 | `guardioes/{device_id}/config` | servidor → dispositivo | Configuração/calibração (retained, QoS 1) |
 | `guardioes/{device_id}/status` | dispositivo → servidor | Heartbeat `{"online": true}` a cada 30s |
 
-### Como subir a stack v2
+### Instalação rápida (Fase 2 — Instalador automatizado)
+
+**Instale todo o stack com um único comando:**
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-phase1/install.sh | bash
+```
+
+O instalador irá:
+- Detectar o sistema operacional
+- Instalar Docker e Docker Compose se necessário (Ubuntu/Debian)
+- Baixar o código do projeto (release versionada)
+- Gerar credenciais aleatórias seguras
+- Configurar e iniciar todos os serviços
+
+**Guia completo de instalação:** Consulte [`INSTALL.md`](INSTALL.md) para instruções detalhadas, instalação manual, troubleshooting e comandos úteis.
+
+### Como subir a stack v2 (manual)
 
 ```bash
 cp .env.example .env          # defina MQTT_USER / MQTT_PASS e tokens
@@ -67,7 +84,7 @@ pio run -e esp32s3_v2 -t upload  # grava no ESP32-S3
 
 > Na primeira inicialização com a NVS vazia, o dispositivo sobe um Wi-Fi `Guardioes-Setup` (192.168.4.1) com um portal para configurar Wi-Fi, broker MQTT e `device_id`.
 
-> **Roadmap:** Fase 2 (instalador `curl`), Fase 3 (painel de administração), Fase 4 (firmware multi-placa), Fase 5 (flash pelo navegador). Ver `proposta-tecnica-v2.md`.
+> **Roadmap:** ~~Fase 1 (MQTT + ingest + firmware modular)~~ ✅, ~~Fase 2 (instalador `curl`)~~ ✅, Fase 3 (painel de administração), Fase 4 (catálogo de sensores + build sob demanda), Fase 5 (flash pelo navegador). Ver `proposta-tecnica-v2.md`.
 
 ---
 
