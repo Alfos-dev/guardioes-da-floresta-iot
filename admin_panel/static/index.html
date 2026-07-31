@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardiões da Floresta - Painel de Administração</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <!-- Tela de Login -->
+    <div id="login-screen" class="screen">
+        <div class="login-container">
+            <h1>🌱 Guardiões da Floresta</h1>
+            <h2>Painel de Administração</h2>
+            <form id="login-form">
+                <input type="password" id="password" placeholder="Senha de administrador" required>
+                <button type="submit">Entrar</button>
+            </form>
+            <p id="login-error" class="error"></p>
+        </div>
+    </div>
+
+    <!-- Dashboard Principal -->
+    <div id="dashboard-screen" class="screen hidden">
+        <header>
+            <h1>🌱 Guardiões da Floresta</h1>
+            <nav>
+                <button class="tab-btn active" data-tab="devices">Dispositivos</button>
+                <button class="tab-btn" data-tab="grafana">Grafana</button>
+                <button id="logout-btn" class="btn-secondary">Sair</button>
+            </nav>
+        </header>
+
+        <main>
+            <!-- Tab: Dispositivos -->
+            <div id="tab-devices" class="tab-content active">
+                <div class="toolbar">
+                    <h2>Dispositivos Cadastrados</h2>
+                    <button id="add-device-btn" class="btn-primary">+ Novo Dispositivo</button>
+                </div>
+
+                <div id="devices-list" class="devices-grid">
+                    <p class="loading">Carregando...</p>
+                </div>
+            </div>
+
+            <!-- Tab: Grafana -->
+            <div id="tab-grafana" class="tab-content hidden">
+                <div class="grafana-container">
+                    <p class="info-message">
+                        Acesse o Grafana para visualizar dashboards completos e histórico de dados.
+                    </p>
+                    <a href="http://localhost:3000" target="_blank" class="btn-primary btn-large">
+                        Abrir Grafana
+                    </a>
+                    <p class="help-text">Credenciais padrão: admin / admin (solicitará alteração no primeiro acesso)</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal: Novo/Editar Dispositivo -->
+    <div id="device-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modal-title">Novo Dispositivo</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="device-form">
+                <div class="form-group">
+                    <label for="device-id">ID do Dispositivo *</label>
+                    <input type="text" id="device-id" required placeholder="ex: esp32s3_01">
+                </div>
+                <div class="form-group">
+                    <label for="device-nome">Nome (opcional)</label>
+                    <input type="text" id="device-nome" placeholder="ex: Sensor Estufa 1">
+                </div>
+                <div class="form-group">
+                    <label for="device-placa">Placa</label>
+                    <select id="device-placa">
+                        <option value="ESP32-S3">ESP32-S3</option>
+                        <option value="ESP32">ESP32</option>
+                        <option value="ESP8266">ESP8266</option>
+                        <option value="Arduino Uno">Arduino Uno</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="device-transporte">Transporte</label>
+                    <select id="device-transporte">
+                        <option value="mqtt">MQTT (WiFi)</option>
+                        <option value="serial">Serial (USB)</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary modal-close">Cancelar</button>
+                    <button type="submit" class="btn-primary">Salvar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Calibração -->
+    <div id="calibration-modal" class="modal hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Calibração: <span id="calib-device-id"></span></h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="calibration-form">
+                <div class="alert alert-info">
+                    <strong>Configuração Remota:</strong> As alterações são aplicadas em tempo real via MQTT, sem necessidade de regravar o firmware.
+                </div>
+                
+                <div class="form-group">
+                    <label for="soil-dry">Umidade do Solo - Seco (valor bruto ADC)</label>
+                    <input type="number" id="soil-dry" step="1" placeholder="ex: 3200">
+                    <small>Valor ADC quando o solo está completamente seco</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="soil-wet">Umidade do Solo - Molhado (valor bruto ADC)</label>
+                    <input type="number" id="soil-wet" step="1" placeholder="ex: 1500">
+                    <small>Valor ADC quando o solo está completamente molhado</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="publish-interval">Intervalo de Publicação (segundos)</label>
+                    <input type="number" id="publish-interval" step="1" min="10" placeholder="ex: 60">
+                    <small>Frequência de envio de dados (mínimo 10s)</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary modal-close">Cancelar</button>
+                    <button type="submit" class="btn-primary">Aplicar Calibração</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Dados em Tempo Real -->
+    <div id="data-modal" class="modal hidden">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h3>Dados: <span id="data-device-id"></span></h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="data-container">
+                <div class="data-section">
+                    <h4>Últimas Leituras (5 min)</h4>
+                    <div id="latest-data" class="data-grid">
+                        <p class="loading">Carregando...</p>
+                    </div>
+                </div>
+                <div class="data-section">
+                    <h4>Histórico (24h)</h4>
+                    <div id="history-data" class="data-grid">
+                        <p class="loading">Carregando...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

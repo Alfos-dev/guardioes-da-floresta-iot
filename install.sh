@@ -198,6 +198,10 @@ generate_credentials() {
     # Serial Bridge
     SERIAL_DEVICE_ID="esp32s3_serial_01"
     
+    # Admin Panel (Fase 3)
+    ADMIN_PASSWORD=$(generate_password 16)  # Senha menor, mais fácil de digitar se necessário
+    JWT_SECRET=$(generate_password 64)
+    
     log_success "Credenciais geradas com sucesso."
 }
 
@@ -210,11 +214,12 @@ create_env_file() {
 # Gerado automaticamente em $(date -u +"%Y-%m-%dT%H:%M:%SZ")
 
 # InfluxDB
-INFLUXDB_USERNAME=$INFLUX_USERNAME
-INFLUXDB_PASSWORD=$INFLUX_PASSWORD
-INFLUXDB_ADMIN_TOKEN=$INFLUX_TOKEN
-INFLUXDB_ORG=$INFLUX_ORG
-INFLUXDB_BUCKET=$INFLUX_BUCKET
+INFLUX_URL=http://influxdb:8086
+INFLUX_ORG=$INFLUX_ORG
+INFLUX_BUCKET=$INFLUX_BUCKET
+INFLUX_TOKEN=$INFLUX_TOKEN
+INFLUX_INIT_USERNAME=$INFLUX_USERNAME
+INFLUX_INIT_PASSWORD=$INFLUX_PASSWORD
 
 # MQTT (Mosquitto)
 MQTT_USER=$MQTT_USER
@@ -222,6 +227,10 @@ MQTT_PASS=$MQTT_PASS
 
 # Serial Bridge
 SERIAL_DEVICE_ID=$SERIAL_DEVICE_ID
+
+# Admin Panel (Fase 3)
+ADMIN_PASSWORD=$ADMIN_PASSWORD
+JWT_SECRET=$JWT_SECRET
 EOF
     
     chmod 600 "$INSTALL_DIR/.env"
@@ -307,7 +316,7 @@ check_services_health() {
     docker compose ps
     
     # Verificar se serviços principais estão rodando
-    local services=("influxdb" "mosquitto" "ingest_service" "grafana")
+    local services=("influxdb" "mosquitto" "ingest_service" "grafana" "admin_panel")
     local all_healthy=true
     
     for service in "${services[@]}"; do
@@ -349,7 +358,11 @@ show_final_info() {
     echo "    Usuário: $MQTT_USER"
     echo "    Senha: $MQTT_PASS"
     echo ""
+    echo "  Painel de Administração:"
+    echo "    Senha: $ADMIN_PASSWORD"
+    echo ""
     echo "Serviços disponíveis:"
+    echo "  - Painel de Administração: http://localhost:8000 (gerenciar dispositivos)"
     echo "  - Grafana: http://localhost:3000 (admin/admin na primeira vez)"
     echo "  - InfluxDB UI: http://localhost:8086"
     echo "  - MQTT Broker: localhost:1883"
