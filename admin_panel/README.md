@@ -23,6 +23,16 @@ Interface web para gerenciamento de dispositivos IoT e visualização de dados e
 - **Formatação automática**: Conversão de nomes de sensores para português
 - **Organização por tempo**: Ordenação das leituras mais recentes primeiro
 
+### 🆕 Firmware Builder (Fase 4)
+- **Catálogo de sensores**: Biblioteca de sensores suportados (AHT10, Solo, DHT22, LDR)
+- **Seleção de sensores**: Interface visual para escolher quais sensores incluir no dispositivo
+- **Build automatizado**: Compilação de firmware customizado com PlatformIO
+- **Suporte multi-placa**: ESP32-S3 DevKit C-1 e ESP32 DOIT DevKit V1
+- **Download de firmware**: Arquivo .bin pronto para flash
+- **Histórico de builds**: Visualização e download de builds anteriores
+- **Configuração de pinos**: Pinagem automática baseada na placa selecionada
+- **Código otimizado**: Firmware contém apenas drivers dos sensores selecionados
+
 ### Autenticação
 - Login com senha de administrador (gerada automaticamente pelo instalador)
 - Tokens JWT com expiração de 24 horas
@@ -48,6 +58,8 @@ Interface web para gerenciamento de dispositivos IoT e visualização de dados e
 ```
 admin_panel/
 ├── main.py              # Backend FastAPI
+├── sensor_catalog.py    # Catálogo de sensores suportados (Fase 4)
+├── firmware_builder.py  # Sistema de build de firmware (Fase 4)
 ├── requirements.txt     # Dependências Python
 ├── Dockerfile          # Container Docker
 ├── static/             # Frontend
@@ -76,8 +88,16 @@ admin_panel/
 - `GET /api/devices/{device_id}/data/latest` - Últimas leituras (5 min)
 - `GET /api/devices/{device_id}/data/history?start=-24h` - Histórico
 
+### 🆕 Sensores e Firmware (Fase 4)
+- `GET /api/sensors` - Listar todos os sensores do catálogo
+- `GET /api/sensors/{sensor_id}` - Obter detalhes de um sensor
+- `PUT /api/devices/{device_id}/sensors` - Atualizar sensores de um dispositivo
+- `POST /api/firmware/build` - Construir firmware customizado (device_id, board, sensor_ids)
+- `GET /api/firmware/download/{build_id}` - Download do firmware .bin
+- `GET /api/firmware/builds` - Listar histórico de builds
+
 ### Utilitários
-- `GET /api/health` - Health check (status MQTT e InfluxDB)
+- `GET /api/health` - Health check (status MQTT, InfluxDB e Firmware Builder)
 
 ## Uso
 

@@ -536,3 +536,230 @@ form {
         justify-content: space-between;
     }
 }
+
+
+
+/* ===== FASE 4: Firmware Builder Styles ===== */
+
+.firmware-builder {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.builder-section {
+    margin-bottom: 30px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+}
+
+.builder-section:last-child {
+    border-bottom: none;
+}
+
+.builder-section h3 {
+    color: var(--primary);
+    margin-bottom: 15px;
+    font-size: 1.1em;
+}
+
+.sensors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.sensor-card {
+    background: var(--bg);
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.sensor-card:hover {
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.sensor-card.selected {
+    border-color: var(--primary);
+    background: #e8f5e9;
+}
+
+.sensor-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.sensor-card-title {
+    font-weight: 600;
+    color: var(--text);
+    font-size: 0.95em;
+}
+
+.sensor-card-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75em;
+    font-weight: 500;
+    background: var(--primary);
+    color: white;
+}
+
+.sensor-card-description {
+    font-size: 0.85em;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+
+.sensor-card-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+}
+
+.sensor-detail-tag {
+    font-size: 0.75em;
+    padding: 3px 8px;
+    background: var(--border);
+    border-radius: 4px;
+    color: var(--text-light);
+}
+
+.build-status {
+    margin-top: 15px;
+    padding: 15px;
+    border-radius: 4px;
+    font-weight: 500;
+    text-align: center;
+}
+
+.build-status.building {
+    background: #fff3e0;
+    color: var(--warning);
+}
+
+.build-status.success {
+    background: #e8f5e9;
+    color: var(--success);
+}
+
+.build-status.error {
+    background: #ffebee;
+    color: var(--danger);
+}
+
+.builds-history {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 30px;
+    box-shadow: 0 2px 8px var(--shadow);
+}
+
+.builds-history h3 {
+    color: var(--primary);
+    margin-bottom: 20px;
+}
+
+.builds-grid {
+    display: grid;
+    gap: 15px;
+}
+
+.build-card {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: center;
+}
+
+.build-card-info h4 {
+    color: var(--text);
+    margin-bottom: 8px;
+    font-size: 1em;
+}
+
+.build-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    font-size: 0.85em;
+    color: var(--text-light);
+    margin-bottom: 8px;
+}
+
+.build-card-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.build-card-sensors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.build-sensor-tag {
+    font-size: 0.75em;
+    padding: 3px 8px;
+    background: var(--primary);
+    color: white;
+    border-radius: 12px;
+}
+
+.build-card-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-download {
+    background: var(--info);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn-download:hover {
+    background: #1565c0;
+}
+
+.btn-large {
+    padding: 15px 30px;
+    font-size: 1.1em;
+    font-weight: 600;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .sensors-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .build-card {
+        grid-template-columns: 1fr;
+    }
+    
+    .build-card-actions {
+        justify-content: flex-start;
+    }
+}

@@ -411,3 +411,205 @@ window.addEventListener('DOMContentLoaded', () => {
         showScreen('login');
     }
 });
+
+
+
+// ===== FASE 4: Firmware Builder =====
+
+let sensorsCatalog = [];
+let selectedSensors = [];
+
+// Carrega catálogo de sensores
+async function loadSensorsCatalog() {
+    try {
+        const response = await apiRequest('/api/sensors');
+        sensorsCatalog = response.sensors;
+        renderSensorsCatalog();
+    } catch (error) {
+        showError('Erro ao carregar catálogo de sensores: ' + error.message);
+    }
+}
+
+// Renderiza catálogo de sensores
+function renderSensorsCatalog() {
+    const catalogEl = document.getElementById('sensors-catalog');
+    
+    if (sensorsCatalog.length === 0) {
+        catalogEl.innerHTML = '<p class="loading">Nenhum sensor disponível</p>';
+        return;
+    }
+    
+    catalogEl.innerHTML = sensorsCatalog.map(sensor => `
+        <div class="sensor-card" data-sensor-id="${sensor.id}" onclick="toggleSensor('${sensor.id}')">
+            <div class="sensor-card-header">
+                <span class="sensor-card-title">${sensor.name}</span>
+                <span class="sensor-card-badge">${sensor.interface}</span>
+            </div>
+            <p class="sensor-card-description">${sensor.description}</p>
+            <div class="sensor-card-details">
+                <span class="sensor-detail-tag">📊 ${sensor.readings.join(', ')}</span>
+                ${sensor.calibration ? '<span class="sensor-detail-tag">🔧 Requer calibração</span>' : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+// Toggle seleção de sensor
+function toggleSensor(sensorId) {
+    const card = document.querySelector(`.sensor-card[data-sensor-id="${sensorId}"]`);
+    
+    if (selectedSensors.includes(sensorId)) {
+        // Remove
+        selectedSensors = selectedSensors.filter(id => id !== sensorId);
+        card.classList.remove('selected');
+    } else {
+        // Adiciona
+        selectedSensors.push(sensorId);
+        card.classList.add('selected');
+    }
+}
+
+// Constrói firmware customizado
+async function buildFirmware() {
+    const deviceId = document.getElementById('fw-device-id').value.trim();
+    const board = document.getElementById('fw-board').value;
+    const statusEl = document.getElementById('build-status');
+    const buildBtn = document.getElementById('build-firmware-btn');
+    
+    // Validações
+    if (!deviceId) {
+        alert('Por favor, informe o Device ID');
+        return;
+    }
+    
+    if (selectedSensors.length === 0) {
+        alert('Por favor, selecione pelo menos um sensor');
+        return;
+    }
+    
+    // Status: building
+    statusEl.textContent = '🔧 Compilando firmware... isso pode levar alguns minutos.';
+    statusEl.className = 'build-status building';
+    buildBtn.disabled = true;
+    
+    try {
+        const response = await apiRequest('/api/firmware/build', 'POST', {
+            device_id: deviceId,
+            board: board,
+            sensor_ids: selectedSensors
+        });
+        
+        // Sucesso!
+        statusEl.textContent = `✅ Firmware compilado com sucesso! Build ID: ${response.build_id}`;
+        statusEl.className = 'build-status success';
+        
+        // Atualiza lista de builds
+        loadBuilds();
+        
+        // Limpa seleções após 3 segundos
+        setTimeout(() => {
+            document.getElementById('fw-device-id').value = '';
+            selectedSensors = [];
+            renderSensorsCatalog();
+            statusEl.textContent = '';
+            statusEl.className = 'build-status';
+        }, 3000);
+        
+    } catch (error) {
+        statusEl.textContent = `❌ Erro ao compilar firmware: ${error.message}`;
+        statusEl.className = 'build-status error';
+    } finally {
+        buildBtn.disabled = false;
+    }
+}
+
+// Carrega histórico de builds
+async function loadBuilds() {
+    try {
+        const response = await apiRequest('/api/firmware/builds');
+        renderBuilds(response.builds);
+    } catch (error) {
+        showError('Erro ao carregar builds: ' + error.message);
+    }
+}
+
+// Renderiza lista de builds
+function renderBuilds(builds) {
+    const buildsEl = document.getElementById('builds-list');
+    
+    if (builds.length === 0) {
+        buildsEl.innerHTML = '<p class="loading">Nenhum build disponível</p>';
+        return;
+    }
+    
+    buildsEl.innerHTML = builds.map(build => {
+        const date = new Date(build.timestamp);
+        const size = (build.firmware_size / 1024).toFixed(1);
+        
+        return `
+            <div class="build-card">
+                <div class="build-card-info">
+                    <h4>📦 ${build.device_id}</h4>
+                    <div class="build-card-meta">
+                        <span>🖥️ ${build.board}</span>
+                        <span>📅 ${date.toLocaleDateString('pt-BR')} ${date.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'})}</span>
+                        <span>💾 ${size} KB</span>
+                    </div>
+                    <div class="build-card-sensors">
+                        ${build.sensors.map(s => `<span class="build-sensor-tag">${s}</span>`).join('')}
+                    </div>
+                </div>
+                <div class="build-card-actions">
+                    <button class="btn-download" onclick="downloadFirmware('${build.build_id}', '${build.firmware_file}')">
+                        ⬇️ Download
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Download de firmware
+async function downloadFirmware(buildId, filename) {
+    try {
+        const token = getToken();
+        const response = await fetch(`/api/firmware/download/${buildId}`, {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error('Erro ao fazer download');
+        }
+        
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+        
+    } catch (error) {
+        alert('Erro ao fazer download: ' + error.message);
+    }
+}
+
+// Event listener para botão de build
+document.getElementById('build-firmware-btn')?.addEventListener('click', buildFirmware);
+
+// Inicializa aba de firmware quando ativada
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const tab = btn.dataset.tab;
+        if (tab === 'firmware') {
+            if (sensorsCatalog.length === 0) {
+                loadSensorsCatalog();
+            }
+            loadBuilds();
+        }
+    });
+});
