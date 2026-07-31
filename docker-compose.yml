@@ -115,6 +115,7 @@ services:
       SQLITE_PATH: /data/devices.db
     volumes:
       - devices_data:/data
+      - ./firmware-v2:/firmware-v2:ro  # Firmware source (read-only) para builds
     depends_on:
       - mosquitto
       - influxdb

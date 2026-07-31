@@ -22,6 +22,10 @@ from passlib.hash import bcrypt
 import paho.mqtt.client as mqtt
 from influxdb_client import InfluxDBClient, QueryApi
 
+# Fase 4: Catálogo de sensores e firmware builder
+from sensor_catalog import SENSOR_CATALOG, get_sensor_by_id, validate_sensor_ids
+from firmware_builder import FirmwareBuilder, FirmwareBuildError
+
 # Configurações via variáveis de ambiente
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")  # Senha gerada pelo instalador
 JWT_SECRET = os.getenv("JWT_SECRET", "change-this-secret-key")
@@ -48,12 +52,15 @@ mqtt_client: Optional[mqtt.Client] = None
 influx_client: Optional[InfluxDBClient] = None
 influx_query_api: Optional[QueryApi] = None
 
+# Firmware Builder (Fase 4)
+firmware_builder: Optional[FirmwareBuilder] = None
+
 
 # ===== Lifecycle Management =====
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gerencia startup e shutdown da aplicação"""
-    global mqtt_client, influx_client, influx_query_api
+    global mqtt_client, influx_client, influx_query_api, firmware_builder
     
     # Startup: conectar MQTT e InfluxDB
     print(f"[STARTUP] Conectando ao MQTT broker {MQTT_HOST}:{MQTT_PORT}...")
@@ -73,6 +80,16 @@ async def lifespan(app: FastAPI):
         print("[STARTUP] Conectado ao InfluxDB")
     except Exception as e:
         print(f"[ERRO] Falha ao conectar InfluxDB: {e}")
+    
+    print("[STARTUP] Inicializando Firmware Builder...")
+    try:
+        firmware_builder = FirmwareBuilder(
+            firmware_dir="/firmware-v2",
+            builds_dir="/data/builds"
+        )
+        print("[STARTUP] Firmware Builder pronto")
+    except Exception as e:
+        print(f"[ERRO] Falha ao inicializar Firmware Builder: {e}")
     
     yield  # Aplicação roda
     
@@ -129,6 +146,31 @@ class Device(DeviceBase):
     
     class Config:
         from_attributes = True
+
+
+# Fase 4: Modelos para gerenciamento de sensores e firmware
+class SensorsUpdate(BaseModel):
+    """Atualização da lista de sensores de um dispositivo"""
+    sensor_ids: List[str]
+
+
+class FirmwareBuildRequest(BaseModel):
+    """Requisição de build de firmware customizado"""
+    device_id: str
+    board: str  # "ESP32-S3" ou "ESP32"
+    sensor_ids: List[str]
+
+
+class FirmwareBuildResponse(BaseModel):
+    """Resposta de build de firmware"""
+    build_id: str
+    device_id: str
+    board: str
+    sensors: List[str]
+    timestamp: str
+    firmware_file: str
+    firmware_size: int
+    status: str
 
 
 # ===== Database Helper =====
@@ -436,13 +478,166 @@ async def get_history_data(
         raise HTTPException(status_code=500, detail=f"Erro ao consultar InfluxDB: {str(e)}")
 
 
+# ===== FASE 4: Endpoints de Catálogo de Sensores e Firmware Builder =====
+
+@app.get("/api/sensors")
+async def list_sensors(auth: dict = Depends(verify_token)):
+    """Lista todos os sensores disponíveis no catálogo"""
+    return {
+        "sensors": [sensor.dict() for sensor in SENSOR_CATALOG],
+        "total": len(SENSOR_CATALOG)
+    }
+
+
+@app.get("/api/sensors/{sensor_id}")
+async def get_sensor(sensor_id: str, auth: dict = Depends(verify_token)):
+    """Obtém detalhes de um sensor específico"""
+    sensor = get_sensor_by_id(sensor_id)
+    if not sensor:
+        raise HTTPException(status_code=404, detail=f"Sensor não encontrado: {sensor_id}")
+    return sensor.dict()
+
+
+@app.put("/api/devices/{device_id}/sensors")
+async def update_device_sensors(
+    device_id: str,
+    update: SensorsUpdate,
+    auth: dict = Depends(verify_token)
+):
+    """Atualiza a lista de sensores de um dispositivo"""
+    # Valida sensores
+    if not validate_sensor_ids(update.sensor_ids):
+        raise HTTPException(status_code=400, detail="IDs de sensores inválidos")
+    
+    conn = get_db()
+    cursor = conn.cursor()
+    
+    # Verifica se dispositivo existe
+    cursor.execute("SELECT device_id FROM devices WHERE device_id = ?", (device_id,))
+    if not cursor.fetchone():
+        conn.close()
+        raise HTTPException(status_code=404, detail="Dispositivo não encontrado")
+    
+    # Atualiza sensores
+    sensors_json = json.dumps(update.sensor_ids)
+    cursor.execute(
+        "UPDATE devices SET sensores = ? WHERE device_id = ?",
+        (sensors_json, device_id)
+    )
+    conn.commit()
+    conn.close()
+    
+    return {
+        "device_id": device_id,
+        "sensors": update.sensor_ids,
+        "message": "Sensores atualizados com sucesso"
+    }
+
+
+@app.post("/api/firmware/build", response_model=FirmwareBuildResponse)
+async def build_firmware(
+    request: FirmwareBuildRequest,
+    auth: dict = Depends(verify_token)
+):
+    """
+    Constrói firmware customizado baseado na placa e sensores selecionados
+    Retorna informações do build incluindo build_id para download
+    """
+    if not firmware_builder:
+        raise HTTPException(status_code=503, detail="Firmware Builder não disponível")
+    
+    # Valida placa
+    if request.board not in ["ESP32-S3", "ESP32"]:
+        raise HTTPException(status_code=400, detail=f"Placa não suportada: {request.board}")
+    
+    # Valida sensores
+    if not validate_sensor_ids(request.sensor_ids):
+        raise HTTPException(status_code=400, detail="IDs de sensores inválidos")
+    
+    if not request.sensor_ids:
+        raise HTTPException(status_code=400, detail="Pelo menos um sensor deve ser selecionado")
+    
+    try:
+        # Executa build
+        build_info = firmware_builder.create_build(
+            device_id=request.device_id,
+            board=request.board,
+            sensor_ids=request.sensor_ids
+        )
+        
+        return FirmwareBuildResponse(**build_info)
+        
+    except FirmwareBuildError as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro inesperado: {str(e)}")
+
+
+@app.get("/api/firmware/download/{build_id}")
+async def download_firmware(build_id: str, auth: dict = Depends(verify_token)):
+    """
+    Faz download do firmware compilado (.bin)
+    """
+    if not firmware_builder:
+        raise HTTPException(status_code=503, detail="Firmware Builder não disponível")
+    
+    # Obtém informações do build
+    build_info = firmware_builder.get_build_info(build_id)
+    if not build_info:
+        raise HTTPException(status_code=404, detail="Build não encontrado")
+    
+    # Obtém caminho do arquivo .bin
+    firmware_path = firmware_builder.get_firmware_path(build_id)
+    if not firmware_path or not firmware_path.exists():
+        raise HTTPException(status_code=404, detail="Arquivo de firmware não encontrado")
+    
+    # Retorna arquivo para download
+    return FileResponse(
+        path=str(firmware_path),
+        filename=build_info["firmware_file"],
+        media_type="application/octet-stream"
+    )
+
+
+@app.get("/api/firmware/builds")
+async def list_builds(auth: dict = Depends(verify_token)):
+    """Lista todos os builds de firmware disponíveis"""
+    if not firmware_builder:
+        raise HTTPException(status_code=503, detail="Firmware Builder não disponível")
+    
+    builds = []
+    builds_dir = firmware_builder.builds_dir
+    
+    if builds_dir.exists():
+        for build_dir in builds_dir.iterdir():
+            if build_dir.is_dir():
+                metadata_file = build_dir / "metadata.json"
+                if metadata_file.exists():
+                    try:
+                        metadata = json.loads(metadata_file.read_text())
+                        builds.append(metadata)
+                    except Exception:
+                        continue
+    
+    # Ordena por timestamp (mais recente primeiro)
+    builds.sort(key=lambda x: x.get("timestamp", ""), reverse=True)
+    
+    return {
+        "builds": builds,
+        "total": len(builds)
+    }
+
+
+# ===== Health Check =====
+
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
     return {
         "status": "ok",
         "mqtt_connected": mqtt_client.is_connected() if mqtt_client else False,
-        "influx_connected": influx_client is not None
+        "influx_connected": influx_client is not None,
+        "firmware_builder_ready": firmware_builder is not None
     }
 
 

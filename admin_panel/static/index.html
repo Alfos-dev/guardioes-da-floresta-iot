@@ -26,6 +26,7 @@
             <h1>🌱 Guardiões da Floresta</h1>
             <nav>
                 <button class="tab-btn active" data-tab="devices">Dispositivos</button>
+                <button class="tab-btn" data-tab="firmware">Firmware</button>
                 <button class="tab-btn" data-tab="grafana">Grafana</button>
                 <button id="logout-btn" class="btn-secondary">Sair</button>
             </nav>
@@ -41,6 +42,56 @@
 
                 <div id="devices-list" class="devices-grid">
                     <p class="loading">Carregando...</p>
+                </div>
+            </div>
+
+            <!-- Tab: Firmware -->
+            <div id="tab-firmware" class="tab-content hidden">
+                <div class="toolbar">
+                    <h2>Construtor de Firmware Customizado</h2>
+                </div>
+
+                <div class="firmware-builder">
+                    <!-- Seleção de dispositivo e placa -->
+                    <div class="builder-section">
+                        <h3>1. Configuração do Dispositivo</h3>
+                        <div class="form-group">
+                            <label for="fw-device-id">Device ID *</label>
+                            <input type="text" id="fw-device-id" placeholder="ex: esp32_field_01" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fw-board">Placa *</label>
+                            <select id="fw-board" required>
+                                <option value="ESP32-S3">ESP32-S3 DevKit C-1 (Recomendado)</option>
+                                <option value="ESP32">ESP32 DOIT DevKit V1 (Custo-benefício)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Seleção de sensores -->
+                    <div class="builder-section">
+                        <h3>2. Seleção de Sensores</h3>
+                        <p class="help-text">Selecione os sensores que serão utilizados neste dispositivo:</p>
+                        <div id="sensors-catalog" class="sensors-grid">
+                            <p class="loading">Carregando catálogo de sensores...</p>
+                        </div>
+                    </div>
+
+                    <!-- Ações -->
+                    <div class="builder-section">
+                        <button id="build-firmware-btn" class="btn-primary btn-large">
+                            🔧 Construir Firmware
+                        </button>
+                        <p id="build-status" class="build-status"></p>
+                    </div>
+                </div>
+
+                <!-- Histórico de Builds -->
+                <div class="builds-history">
+                    <h3>Histórico de Builds</h3>
+                    <div id="builds-list" class="builds-grid">
+                        <p class="loading">Carregando builds...</p>
+                    </div>
                 </div>
             </div>
 
