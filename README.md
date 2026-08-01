@@ -6,7 +6,7 @@ A proposta é oferecer ao pequeno agricultor uma ferramenta acessível e confiá
 
 ---
 
-## 🚧 v2.0 — Em desenvolvimento (Fases 1, 2, 3, 4, 5 e 6 concluídas)
+## v2.0 — Em desenvolvimento
 
 A **v2.0** evolui o sistema para uma arquitetura **MQTT-first**, na qual todo transporte (serial e Wi-Fi) passa primeiro pelo broker MQTT e um único serviço (`ingest_service`) normaliza e grava os dados. A v1.0 descrita abaixo continua **100% funcional e não foi alterada** — a v2.0 coexiste em paralelo.
 
