@@ -67,10 +67,15 @@ function showScreen(screenName) {
 
 function switchTab(tabName) {
     $$('.tab-btn').forEach(btn => btn.classList.remove('active'));
-    $$('.tab-content').forEach(content => content.classList.remove('active'));
-    
+    $$('.tab-content').forEach(content => {
+        content.classList.remove('active');
+        content.classList.add('hidden');
+    });
+
     $(`[data-tab="${tabName}"]`).classList.add('active');
-    $(`#tab-${tabName}`).classList.add('active');
+    const content = $(`#tab-${tabName}`);
+    content.classList.add('active');
+    content.classList.remove('hidden');
 }
 
 function showModal(modalId) {
@@ -783,3 +788,257 @@ function stopFlashPolling() {
 
 // Event listener do botão "Iniciar Gravação"
 document.getElementById('start-flash-btn')?.addEventListener('click', startFlash);
+
+
+// ===== FASE 5: Dashboard de Dados em Tempo Real =====
+
+let dashboardCharts = {};
+let currentDashDeviceId = null;
+let currentDashRange = "-24h";
+let dashboardRefreshTimer = null;
+let dashboardLoaded = false;
+
+// Metadados dos cards de métricas
+const DASH_METRICS = [
+    { sensor: "air_temp", icon: "🌡️", label: "Temperatura do Ar", unit: "°C", color: "#2196F3" },
+    { sensor: "air_humidity", icon: "💧", label: "Umidade do Ar", unit: "%", color: "#4CAF50" },
+    { sensor: "soil_moisture", icon: "🌱", label: "Umidade do Solo", unit: "%", color: "#FF9800" },
+];
+
+// Mapeia sensor -> id do canvas
+const DASH_CHART_CANVAS = {
+    "air_temp": "chart-air-temp",
+    "air_humidity": "chart-air-humidity",
+    "soil_moisture": "chart-soil-moisture",
+};
+
+// Carrega visão geral e monta a sidebar
+async function loadDashboard() {
+    const listEl = $('#dash-device-list');
+    listEl.innerHTML = '<p class="loading">Carregando...</p>';
+
+    try {
+        const overview = await request('/dashboard/overview');
+        renderDashboardDeviceList(overview);
+        dashboardLoaded = true;
+    } catch (error) {
+        listEl.innerHTML = `<p class="error">Erro: ${error.message}</p>`;
+    }
+}
+
+// Renderiza a lista de dispositivos na sidebar
+function renderDashboardDeviceList(overview) {
+    const listEl = $('#dash-device-list');
+    const devices = overview.devices || [];
+
+    if (devices.length === 0) {
+        listEl.innerHTML = '<p class="empty">Nenhum dispositivo cadastrado.</p>';
+        return;
+    }
+
+    listEl.innerHTML = devices.map(item => {
+        const d = item.device;
+        const online = item.online;
+        const selected = d.device_id === currentDashDeviceId ? 'selected' : '';
+        return `
+            <div class="dash-device-item ${selected}" data-device-id="${d.device_id}" data-device-name="${(d.nome || 'Sem nome').replace(/"/g, '&quot;')}">
+                <span class="status-dot ${online ? 'online' : 'offline'}"></span>
+                <div class="dash-item-body">
+                    <span class="dash-item-name">${d.nome || 'Sem nome'}</span>
+                    <span class="dash-item-id">${d.device_id}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    // Event listeners de seleção
+    $$('#dash-device-list .dash-device-item').forEach(el => {
+        el.addEventListener('click', () => {
+            selectDashDevice(el.dataset.deviceId, el.dataset.deviceName);
+        });
+    });
+}
+
+// Seleciona um dispositivo e inicia visualização + auto-refresh
+function selectDashDevice(deviceId, deviceName) {
+    currentDashDeviceId = deviceId;
+
+    // Atualiza estado selecionado na sidebar
+    $$('#dash-device-list .dash-device-item').forEach(el => {
+        el.classList.toggle('selected', el.dataset.deviceId === deviceId);
+    });
+
+    // Mostra área de conteúdo
+    $('#dash-empty').classList.add('hidden');
+    $('#dash-content').classList.remove('hidden');
+    $('#dash-device-name').textContent = deviceName || deviceId;
+    $('#dash-device-id').textContent = deviceId;
+
+    loadDashboardCharts();
+
+    // Reinicia auto-refresh (30s)
+    if (dashboardRefreshTimer) {
+        clearInterval(dashboardRefreshTimer);
+    }
+    dashboardRefreshTimer = setInterval(() => {
+        if (currentDashDeviceId) {
+            loadDashboardCharts();
+        }
+    }, 30000);
+}
+
+// Altera o período e recarrega os gráficos
+function setDashRange(range) {
+    currentDashRange = range;
+    $$('.range-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.range === range);
+    });
+    if (currentDashDeviceId) {
+        loadDashboardCharts();
+    }
+}
+
+// Carrega cards de métricas + gráficos
+async function loadDashboardCharts() {
+    if (!currentDashDeviceId) return;
+    const deviceId = currentDashDeviceId;
+
+    // Cards de métricas (últimas leituras)
+    try {
+        const latest = await request(`/devices/${deviceId}/data/latest`);
+        renderMetricCards(latest.readings || []);
+    } catch (error) {
+        $('#dash-metrics').innerHTML = `<p class="error">Erro ao carregar métricas: ${error.message}</p>`;
+    }
+
+    // Gráficos (séries temporais)
+    try {
+        const sensors = "air_temp,air_humidity,soil_moisture";
+        const window = dashWindowForRange(currentDashRange);
+        const chartData = await request(
+            `/devices/${deviceId}/data/chart?sensors=${sensors}&start=${currentDashRange}&window=${window}`
+        );
+        renderCharts(chartData);
+    } catch (error) {
+        console.error('Erro ao carregar gráficos:', error);
+    }
+}
+
+// Define a janela de agregação conforme o período
+function dashWindowForRange(range) {
+    switch (range) {
+        case "-1h": return "1m";
+        case "-6h": return "5m";
+        case "-24h": return "10m";
+        case "-7d": return "1h";
+        default: return "10m";
+    }
+}
+
+// Renderiza os cards de métricas com as últimas leituras
+function renderMetricCards(readings) {
+    const metricsEl = $('#dash-metrics');
+
+    // Consolida os valores mais recentes por sensor
+    const latestValues = {};
+    readings.forEach(reading => {
+        Object.entries(reading.values || {}).forEach(([key, value]) => {
+            if (typeof value === 'number') {
+                latestValues[key] = value;
+            }
+        });
+    });
+
+    metricsEl.innerHTML = DASH_METRICS.map(metric => {
+        const value = latestValues[metric.sensor];
+        const displayValue = (typeof value === 'number') ? value.toFixed(1) : '--';
+        return `
+            <div class="metric-card" style="border-left-color: ${metric.color};">
+                <span class="metric-icon">${metric.icon}</span>
+                <div class="metric-body">
+                    <div>
+                        <span class="metric-value">${displayValue}</span><span class="metric-unit">${metric.unit}</span>
+                    </div>
+                    <span class="metric-label">${metric.label}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+// Renderiza todos os gráficos a partir dos datasets
+function renderCharts(chartData) {
+    const labels = chartData.labels || [];
+    (chartData.datasets || []).forEach(dataset => {
+        const canvasId = DASH_CHART_CANVAS[dataset.sensor];
+        if (canvasId) {
+            renderSingleChart(canvasId, labels, dataset);
+        }
+    });
+}
+
+// Cria ou atualiza um gráfico Chart.js
+function renderSingleChart(canvasId, labels, dataset) {
+    const canvas = document.getElementById(canvasId);
+    if (!canvas) return;
+
+    // Destrói gráfico existente
+    if (dashboardCharts[canvasId]) {
+        dashboardCharts[canvasId].destroy();
+    }
+
+    const formattedLabels = labels.map(iso => formatChartLabel(iso, currentDashRange));
+
+    dashboardCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            labels: formattedLabels,
+            datasets: [{
+                label: dataset.label,
+                data: dataset.data,
+                borderColor: dataset.borderColor,
+                backgroundColor: dataset.backgroundColor,
+                tension: 0.3,
+                fill: false,
+                pointRadius: 2,
+                spanGaps: true,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: false },
+                x: { ticks: { maxTicksLimit: 8 } }
+            }
+        }
+    });
+}
+
+// Formata o rótulo do eixo X conforme o período
+function formatChartLabel(iso, range) {
+    const date = new Date(iso);
+    if (range === "-7d") {
+        return date.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+    }
+    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+}
+
+// Event listeners dos botões de período
+$$('.range-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        setDashRange(btn.dataset.range);
+    });
+});
+
+// Ativa o dashboard ao trocar de aba
+$$('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        if (btn.dataset.tab === 'dashboard' && !dashboardLoaded) {
+            loadDashboard();
+        }
+    });
+});

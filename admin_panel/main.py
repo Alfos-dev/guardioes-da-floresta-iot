@@ -707,6 +707,163 @@ async def get_flash_status(flash_id: str, auth: dict = Depends(verify_token)):
     return job.to_dict()
 
 
+# ===== FASE 5: Dashboard de Dados em Tempo Real =====
+
+# Rótulos em pt-BR para cada sensor
+SENSOR_LABELS = {
+    "air_temp": "Temperatura do Ar (°C)",
+    "air_humidity": "Umidade do Ar (%)",
+    "soil_moisture": "Umidade do Solo (%)",
+    "light": "Luminosidade (lux)",
+}
+
+# Paleta de cores para os gráficos
+CHART_COLORS = ["#2196F3", "#4CAF50", "#FF9800", "#9C27B0", "#F44336"]
+
+
+def _hex_to_rgba(hex_color: str, alpha: float = 0.1) -> str:
+    """Converte cor hexadecimal para rgba com transparência"""
+    hex_color = hex_color.lstrip("#")
+    r = int(hex_color[0:2], 16)
+    g = int(hex_color[2:4], 16)
+    b = int(hex_color[4:6], 16)
+    return f"rgba({r}, {g}, {b}, {alpha})"
+
+
+@app.get("/api/dashboard/overview")
+async def dashboard_overview(auth: dict = Depends(verify_token)):
+    """
+    Visão geral do dashboard: lista todos os dispositivos com sua última
+    leitura (últimos 5 minutos) e status online/offline.
+    """
+    conn = get_db()
+    cursor = conn.cursor()
+    devices = []
+    for row in cursor.execute("SELECT * FROM devices ORDER BY criado_em DESC"):
+        device = dict(row)
+        if device.get("sensores"):
+            device["sensores"] = json.loads(device["sensores"])
+        if device.get("calibracao"):
+            device["calibracao"] = json.loads(device["calibracao"])
+        devices.append(device)
+    conn.close()
+
+    overview = []
+    for device in devices:
+        device_id = device["device_id"]
+        latest = None
+        online = False
+
+        if influx_query_api:
+            query = f'''
+            from(bucket: "{INFLUX_BUCKET}")
+                |> range(start: -5m)
+                |> filter(fn: (r) => r["_measurement"] == "sensor_data")
+                |> filter(fn: (r) => r["_field"] == "value")
+                |> filter(fn: (r) => r["device_id"] == "{device_id}")
+                |> last()
+                |> pivot(rowKey:["_time"], columnKey: ["sensor"], valueColumn: "_value")
+            '''
+            try:
+                tables = influx_query_api.query(query, org=INFLUX_ORG)
+                values = {}
+                last_time = None
+                for table in tables:
+                    for record in table.records:
+                        rec_time = record.get_time()
+                        if last_time is None or rec_time > last_time:
+                            last_time = rec_time
+                        for k, v in record.values.items():
+                            if not k.startswith("_") and k not in ["device_id", "unit", "result", "table"]:
+                                values[k] = v
+                if values and last_time is not None:
+                    latest = {"time": last_time.isoformat(), "values": values}
+                    online = True
+            except Exception as e:
+                print(f"[ERRO] overview InfluxDB {device_id}: {e}")
+
+        overview.append({
+            "device": device,
+            "latest": latest,
+            "online": online,
+        })
+
+    return {"devices": overview, "total": len(overview)}
+
+
+@app.get("/api/devices/{device_id}/data/chart")
+async def get_chart_data(
+    device_id: str,
+    sensors: str = "air_temp,air_humidity,soil_moisture",
+    start: str = "-24h",
+    window: str = "10m",
+    auth: dict = Depends(verify_token)
+):
+    """
+    Retorna séries temporais agregadas formatadas para Chart.js.
+    Cada sensor solicitado gera um dataset com labels e dados alinhados.
+    """
+    if not influx_query_api:
+        raise HTTPException(status_code=503, detail="InfluxDB não disponível")
+
+    sensor_list = [s.strip() for s in sensors.split(",") if s.strip()]
+    if not sensor_list:
+        raise HTTPException(status_code=400, detail="Nenhum sensor informado")
+
+    # Coleta pontos por sensor: {sensor: {iso_time: value}}
+    series: Dict[str, Dict[str, float]] = {}
+    all_times = set()
+
+    for sensor in sensor_list:
+        query = f'''
+        from(bucket: "{INFLUX_BUCKET}")
+            |> range(start: {start})
+            |> filter(fn: (r) => r["_measurement"] == "sensor_data")
+            |> filter(fn: (r) => r["_field"] == "value")
+            |> filter(fn: (r) => r["device_id"] == "{device_id}")
+            |> filter(fn: (r) => r["sensor"] == "{sensor}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> yield(name: "mean")
+        '''
+        points: Dict[str, float] = {}
+        try:
+            tables = influx_query_api.query(query, org=INFLUX_ORG)
+            for table in tables:
+                for record in table.records:
+                    value = record.get_value()
+                    if value is None:
+                        continue
+                    iso_time = record.get_time().isoformat()
+                    points[iso_time] = value
+                    all_times.add(iso_time)
+        except Exception as e:
+            print(f"[ERRO] chart InfluxDB {device_id}/{sensor}: {e}")
+        series[sensor] = points
+
+    labels = sorted(all_times)
+
+    datasets = []
+    for idx, sensor in enumerate(sensor_list):
+        color = CHART_COLORS[idx % len(CHART_COLORS)]
+        points = series.get(sensor, {})
+        data = [points.get(t) for t in labels]
+        datasets.append({
+            "sensor": sensor,
+            "label": SENSOR_LABELS.get(sensor, sensor),
+            "data": data,
+            "borderColor": color,
+            "backgroundColor": _hex_to_rgba(color, 0.1),
+        })
+
+    return {
+        "device_id": device_id,
+        "start": start,
+        "window": window,
+        "labels": labels,
+        "datasets": datasets,
+    }
+
+
 # ===== Health Check =====
 
 @app.get("/api/health")

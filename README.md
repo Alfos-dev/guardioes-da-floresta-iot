@@ -6,11 +6,11 @@ A proposta é oferecer ao pequeno agricultor uma ferramenta acessível e confiá
 
 ---
 
-## 🚧 v2.0 — Em desenvolvimento (Fases 1, 2, 3, 4 e 6 concluídas)
+## 🚧 v2.0 — Em desenvolvimento (Fases 1, 2, 3, 4, 5 e 6 concluídas)
 
 A **v2.0** evolui o sistema para uma arquitetura **MQTT-first**, na qual todo transporte (serial e Wi-Fi) passa primeiro pelo broker MQTT e um único serviço (`ingest_service`) normaliza e grava os dados. A v1.0 descrita abaixo continua **100% funcional e não foi alterada** — a v2.0 coexiste em paralelo.
 
-### O que as Fases 1-4 entregam
+### O que as Fases 1-6 entregam
 
 | Componente | Local | Descrição |
 | :--- | :--- | :--- |
@@ -18,7 +18,7 @@ A **v2.0** evolui o sistema para uma arquitetura **MQTT-first**, na qual todo tr
 | **Broker MQTT** | `services/mosquitto/` | Mosquitto 2.x com autenticação usuário/senha e mensagens retained |
 | **ingest_service** | `services/ingest_service/` | Assina `guardioes/+/telemetry` e `guardioes/+/status`, valida o schema genérico, grava no InfluxDB e mantém o registro de dispositivos no SQLite (auto-discovery) |
 | **serial_bridge (atualizado)** | `bridge/` | Deixou de escrever no InfluxDB; agora converte a serial para o schema genérico e **publica no MQTT** (mantém compatibilidade com o payload v1) |
-| **Painel de Administração** | `admin_panel/` | Interface web (FastAPI + HTML/CSS/JS) para gerenciar dispositivos, editar calibração em tempo real via MQTT, visualizar dados históricos, **construtor de firmware customizado** (Fase 4) e **gravação de firmware no ESP32 via servidor/USB** (Fase 6) |
+| **Painel de Administração** | `admin_panel/` | Interface web (FastAPI + HTML/CSS/JS) para gerenciar dispositivos, editar calibração em tempo real via MQTT, visualizar dados históricos, **construtor de firmware customizado** (Fase 4), **dashboard de dados em tempo real** com gráficos e auto-refresh (Fase 5) e **gravação de firmware no ESP32 via servidor/USB** (Fase 6) |
 
 ### Nova arquitetura (v2.0)
 
@@ -85,7 +85,7 @@ pio run -e esp32s3_v2 -t upload  # grava no ESP32-S3
 
 > Na primeira inicialização com a NVS vazia, o dispositivo sobe um Wi-Fi `Guardioes-Setup` (192.168.4.1) com um portal para configurar Wi-Fi, broker MQTT e `device_id`.
 
-> **Roadmap:** ~~Fase 1 (MQTT + ingest + firmware modular)~~ ✅, ~~Fase 2 (instalador `curl`)~~ ✅, ~~Fase 3 (painel de administração)~~ ✅, ~~Fase 4 (catálogo de sensores + build sob demanda)~~ ✅, ~~Fase 6 (flash de firmware pelo painel via servidor/USB)~~ ✅. Ver `proposta-tecnica-v2.md`.
+> **Roadmap:** ~~Fase 1 (MQTT + ingest + firmware modular)~~ ✅, ~~Fase 2 (instalador `curl`)~~ ✅, ~~Fase 3 (painel de administração)~~ ✅, ~~Fase 4 (catálogo de sensores + build sob demanda)~~ ✅, ~~Fase 5 (dashboard de dados em tempo real)~~ ✅, ~~Fase 6 (flash de firmware pelo painel via servidor/USB)~~ ✅. Ver `proposta-tecnica-v2.md`.
 
 ---
 

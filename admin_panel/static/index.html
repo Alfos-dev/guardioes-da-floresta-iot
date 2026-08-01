@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Guardiões da Floresta - Painel de Administração</title>
     <link rel="stylesheet" href="/static/style.css">
+    <script src="/static/chart.min.js"></script>
 </head>
 <body>
     <!-- Tela de Login -->
@@ -26,6 +27,7 @@
             <h1>🌱 Guardiões da Floresta</h1>
             <nav>
                 <button class="tab-btn active" data-tab="devices">Dispositivos</button>
+                <button class="tab-btn" data-tab="dashboard">Dashboard</button>
                 <button class="tab-btn" data-tab="firmware">Firmware</button>
                 <button class="tab-btn" data-tab="grafana">Grafana</button>
                 <button id="logout-btn" class="btn-secondary">Sair</button>
@@ -42,6 +44,64 @@
 
                 <div id="devices-list" class="devices-grid">
                     <p class="loading">Carregando...</p>
+                </div>
+            </div>
+
+            <!-- Tab: Dashboard -->
+            <div id="tab-dashboard" class="tab-content hidden">
+                <div class="dashboard-layout">
+                    <!-- Sidebar: lista de dispositivos -->
+                    <aside class="dashboard-sidebar">
+                        <h3>Dispositivos</h3>
+                        <div id="dash-device-list" class="dash-device-list">
+                            <p class="loading">Carregando...</p>
+                        </div>
+                    </aside>
+
+                    <!-- Área principal -->
+                    <section class="dashboard-main">
+                        <!-- Estado vazio -->
+                        <div id="dash-empty" class="dash-empty">
+                            <p>Selecione um dispositivo na lista ao lado para visualizar seus dados.</p>
+                        </div>
+
+                        <!-- Estado com dados -->
+                        <div id="dash-content" class="dash-content hidden">
+                            <div class="dash-header">
+                                <div class="dash-header-info">
+                                    <h2 id="dash-device-name">Dispositivo</h2>
+                                    <span id="dash-device-id" class="dash-device-id"></span>
+                                </div>
+                                <div class="range-buttons">
+                                    <button class="range-btn" data-range="-1h">1h</button>
+                                    <button class="range-btn" data-range="-6h">6h</button>
+                                    <button class="range-btn active" data-range="-24h">24h</button>
+                                    <button class="range-btn" data-range="-7d">7d</button>
+                                </div>
+                            </div>
+
+                            <!-- Cards de métricas -->
+                            <div id="dash-metrics" class="metric-cards">
+                                <p class="loading">Carregando métricas...</p>
+                            </div>
+
+                            <!-- Grid de gráficos -->
+                            <div class="charts-grid">
+                                <div class="chart-container">
+                                    <h4>Temperatura do Ar</h4>
+                                    <canvas id="chart-air-temp"></canvas>
+                                </div>
+                                <div class="chart-container">
+                                    <h4>Umidade do Ar</h4>
+                                    <canvas id="chart-air-humidity"></canvas>
+                                </div>
+                                <div class="chart-container">
+                                    <h4>Umidade do Solo</h4>
+                                    <canvas id="chart-soil-moisture"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </div>
 

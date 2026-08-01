@@ -875,3 +875,264 @@ form {
     white-space: pre-wrap;
     word-break: break-word;
 }
+
+.dashboard-layout {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+/* Sidebar de dispositivos */
+.dashboard-sidebar {
+    width: 250px;
+    flex-shrink: 0;
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 16px;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.dashboard-sidebar h3 {
+    color: var(--text);
+    font-size: 1.1em;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+}
+
+.dash-device-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.dash-device-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.dash-device-item:hover {
+    background: var(--bg);
+    border-color: var(--border);
+}
+
+.dash-device-item.selected {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.dash-device-item.selected .dash-item-name,
+.dash-device-item.selected .dash-item-id {
+    color: #ffffff;
+}
+
+.dash-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.dash-item-name {
+    display: block;
+    font-weight: 500;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dash-item-id {
+    display: block;
+    font-size: 0.8em;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Indicador de status */
+.status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: var(--text-light);
+}
+
+.status-dot.online {
+    background: var(--success);
+    box-shadow: 0 0 0 3px rgba(56, 142, 60, 0.2);
+}
+
+.status-dot.offline {
+    background: #bdbdbd;
+}
+
+/* Área principal */
+.dashboard-main {
+    flex: 1;
+    min-width: 0;
+}
+
+.dash-empty {
+    background: var(--card-bg);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 60px 20px;
+    text-align: center;
+    color: var(--text-light);
+}
+
+/* Cabeçalho do conteúdo */
+.dash-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.dash-header-info h2 {
+    color: var(--text);
+    margin-bottom: 2px;
+}
+
+.dash-device-id {
+    font-size: 0.85em;
+    color: var(--text-light);
+    font-family: monospace;
+}
+
+/* Botões de período */
+.range-buttons {
+    display: flex;
+    gap: 4px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px;
+}
+
+.range-btn {
+    padding: 6px 14px;
+    border: none;
+    background: transparent;
+    color: var(--text-light);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.range-btn:hover {
+    color: var(--primary);
+}
+
+.range-btn.active {
+    background: var(--primary);
+    color: #ffffff;
+}
+
+/* Cards de métricas */
+.metric-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.metric-card {
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--primary);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.metric-icon {
+    font-size: 2.2rem;
+    line-height: 1;
+}
+
+.metric-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+}
+
+.metric-unit {
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-light);
+    margin-left: 4px;
+}
+
+.metric-label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 4px;
+}
+
+/* Grid de gráficos */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+.chart-container {
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 20px;
+    box-shadow: 0 2px 4px var(--shadow);
+}
+
+.chart-container h4 {
+    color: var(--text);
+    margin-bottom: 12px;
+    font-size: 1rem;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 250px !important;
+}
+
+/* Responsividade do dashboard */
+@media (max-width: 768px) {
+    .dashboard-layout {
+        flex-direction: column;
+    }
+
+    .dashboard-sidebar {
+        width: 100%;
+    }
+
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dash-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
