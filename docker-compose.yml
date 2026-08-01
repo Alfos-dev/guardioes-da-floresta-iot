@@ -98,6 +98,18 @@ services:
     build: ./admin_panel
     container_name: admin_panel
     restart: unless-stopped
+    # Fase 6: acesso às portas seriais do host para gravar firmware no ESP32.
+    # 'privileged: true' concede acesso a todos os devices do host (ex.:
+    # /dev/ttyUSB0, /dev/ttyACM0), evitando ter que listar cada porta e sem
+    # quebrar o container quando nenhum ESP32 está conectado ao servidor.
+    # Se preferir restringir o acesso, comente a linha abaixo e descomente o
+    # bloco 'group_add' + 'devices', ajustando as portas conforme necessário.
+    privileged: true
+    # group_add:
+    #   - "dialout"
+    # devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0"
+    #   - "/dev/ttyACM0:/dev/ttyACM0"
     ports:
       - "8000:8000"
     environment:

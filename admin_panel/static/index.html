@@ -153,6 +153,45 @@
                         <p class="loading">Carregando builds...</p>
                     </div>
                 </div>
+
+                <!-- Fase 6: Gravação de Firmware no Dispositivo -->
+                <div id="flash-panel" class="flash-panel hidden">
+                    <h3>Gravar Firmware no Dispositivo</h3>
+                    <p class="help-text">
+                        O ESP32 deve estar conectado via USB ao servidor. A gravação é
+                        executada no servidor via esptool.
+                    </p>
+                    <p class="flash-build-info">Build: <span id="flash-build-label">-</span></p>
+
+                    <div class="form-group">
+                        <label for="flash-port">Porta Serial</label>
+                        <div class="flash-port-row">
+                            <select id="flash-port"></select>
+                            <button type="button" onclick="refreshPorts()" class="btn-secondary btn-sm">Atualizar</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="flash-baud">Velocidade (baud)</label>
+                        <select id="flash-baud">
+                            <option value="460800" selected>460800 (recomendado)</option>
+                            <option value="115200">115200 (compatibilidade)</option>
+                        </select>
+                    </div>
+
+                    <div class="flash-actions">
+                        <button id="start-flash-btn" class="btn-primary">Iniciar Gravação</button>
+                        <button type="button" onclick="closeFlashPanel()" class="btn-secondary">Cancelar</button>
+                    </div>
+
+                    <div id="flash-progress-area" class="flash-progress-area hidden">
+                        <div class="flash-progress-bar-container">
+                            <div id="flash-progress-bar" class="flash-progress-bar" style="width: 0%"></div>
+                        </div>
+                        <div id="flash-progress-pct" class="flash-progress-pct">0%</div>
+                        <pre id="flash-log" class="flash-log"></pre>
+                    </div>
+                </div>
             </div>
 
             <!-- Tab: Grafana -->

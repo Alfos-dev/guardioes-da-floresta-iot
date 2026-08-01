@@ -42,6 +42,15 @@ Interface web para gerenciamento de dispositivos IoT e visualização de dados e
 - **Configuração de pinos**: Pinagem automática baseada na placa selecionada
 - **Código otimizado**: Firmware contém apenas drivers dos sensores selecionados
 
+### Flash pelo Navegador via servidor (Fase 6)
+- **Gravação sem ferramentas locais**: grava o firmware compilado direto no ESP32 pelo painel web
+- **Execução no servidor**: o flash roda no servidor via `esptool`, então funciona em qualquer navegador e sem HTTPS
+- **Seleção de porta serial**: lista as portas USB-Serial detectadas no servidor (CP210x, CH340, FTDI, ACM, etc.)
+- **Progresso em tempo real**: barra de progresso e log ao vivo via polling (a cada 2s)
+- **Velocidade configurável**: 460800 baud (recomendado) ou 115200 (compatibilidade)
+
+**Requisitos**: o ESP32 deve estar conectado via USB à porta serial do **servidor** (ex.: `/dev/ttyUSB0` ou `/dev/ttyACM0`). No Docker, o serviço `admin_panel` roda com `privileged: true` para acessar os devices do host (ou configure `group_add` + `devices` manualmente).
+
 ### Autenticação
 - Login com senha de administrador (gerada automaticamente pelo instalador)
 - Tokens JWT com expiração de 24 horas
@@ -69,6 +78,7 @@ admin_panel/
 ├── main.py              # Backend FastAPI
 ├── sensor_catalog.py    # Catálogo de sensores suportados (Fase 4)
 ├── firmware_builder.py  # Sistema de build de firmware (Fase 4)
+├── flash_service.py     # Gravação de firmware via esptool (Fase 6)
 ├── requirements.txt     # Dependências Python
 ├── Dockerfile          # Container Docker
 ├── static/             # Frontend
@@ -110,8 +120,13 @@ admin_panel/
 - `GET /api/firmware/download/{build_id}` - Download do firmware .bin
 - `GET /api/firmware/builds` - Listar histórico de builds
 
+### Flash pelo Navegador (Fase 6)
+- `GET /api/flash/ports` - Listar portas seriais disponíveis no servidor
+- `POST /api/flash/start` - Iniciar gravação (body: build_id, port, baud) — retorna flash_id
+- `GET /api/flash/status/{flash_id}` - Consultar status/progresso/log da gravação (polling)
+
 ### Utilitários
-- `GET /api/health` - Health check (status MQTT, InfluxDB e Firmware Builder)
+- `GET /api/health` - Health check (status MQTT, InfluxDB, Firmware Builder e Flash Service)
 
 ## Uso
 

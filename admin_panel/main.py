@@ -26,6 +26,9 @@ from influxdb_client import InfluxDBClient, QueryApi
 from sensor_catalog import SENSOR_CATALOG, get_sensor_by_id, validate_sensor_ids
 from firmware_builder import FirmwareBuilder, FirmwareBuildError
 
+# Fase 6: Gravação de firmware via servidor (flash)
+from flash_service import FlashService, FlashError
+
 # Configurações via variáveis de ambiente
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")  # Senha gerada pelo instalador
 JWT_SECRET = os.getenv("JWT_SECRET", "change-this-secret-key")
@@ -55,12 +58,15 @@ influx_query_api: Optional[QueryApi] = None
 # Firmware Builder (Fase 4)
 firmware_builder: Optional[FirmwareBuilder] = None
 
+# Flash Service (Fase 6)
+flash_service: Optional[FlashService] = None
+
 
 # ===== Lifecycle Management =====
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Gerencia startup e shutdown da aplicação"""
-    global mqtt_client, influx_client, influx_query_api, firmware_builder
+    global mqtt_client, influx_client, influx_query_api, firmware_builder, flash_service
     
     # Startup: conectar MQTT e InfluxDB
     print(f"[STARTUP] Conectando ao MQTT broker {MQTT_HOST}:{MQTT_PORT}...")
@@ -90,6 +96,16 @@ async def lifespan(app: FastAPI):
         print("[STARTUP] Firmware Builder pronto")
     except Exception as e:
         print(f"[ERRO] Falha ao inicializar Firmware Builder: {e}")
+    
+    print("[STARTUP] Inicializando Flash Service...")
+    try:
+        if firmware_builder:
+            flash_service = FlashService(firmware_builder)
+            print("[STARTUP] Flash Service pronto")
+        else:
+            print("[ERRO] Flash Service requer Firmware Builder")
+    except Exception as e:
+        print(f"[ERRO] Falha ao inicializar Flash Service: {e}")
     
     yield  # Aplicação roda
     
@@ -171,6 +187,14 @@ class FirmwareBuildResponse(BaseModel):
     firmware_file: str
     firmware_size: int
     status: str
+
+
+# Fase 6: Modelos para gravação de firmware (flash)
+class FlashStartRequest(BaseModel):
+    """Requisição para iniciar a gravação de firmware no dispositivo"""
+    build_id: str
+    port: str
+    baud: int = 460800
 
 
 # ===== Database Helper =====
@@ -628,6 +652,61 @@ async def list_builds(auth: dict = Depends(verify_token)):
     }
 
 
+# ===== Fase 6: Gravação de Firmware (Flash) =====
+
+@app.get("/api/flash/ports")
+async def list_serial_ports(auth: dict = Depends(verify_token)):
+    """Lista as portas seriais disponíveis no servidor para gravação"""
+    if not flash_service:
+        raise HTTPException(status_code=503, detail="Flash Service não disponível")
+
+    ports = flash_service.list_ports()
+    return {
+        "ports": [{"port": p["port"], "description": p["description"]} for p in ports],
+        "total": len(ports),
+    }
+
+
+@app.post("/api/flash/start")
+async def start_flash(request: FlashStartRequest, auth: dict = Depends(verify_token)):
+    """Inicia a gravação do firmware compilado no dispositivo conectado via USB"""
+    if not flash_service:
+        raise HTTPException(status_code=503, detail="Flash Service não disponível")
+
+    try:
+        flash_id = flash_service.start_flash(
+            build_id=request.build_id,
+            port=request.port,
+            baud=request.baud,
+        )
+    except FlashError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao iniciar gravação: {str(e)}")
+
+    job = flash_service.get_job(flash_id)
+    return {
+        "flash_id": job.flash_id,
+        "build_id": job.build_id,
+        "port": job.port,
+        "status": job.status,
+        "started_at": job.started_at,
+    }
+
+
+@app.get("/api/flash/status/{flash_id}")
+async def get_flash_status(flash_id: str, auth: dict = Depends(verify_token)):
+    """Retorna o estado completo de um trabalho de gravação (usado em polling)"""
+    if not flash_service:
+        raise HTTPException(status_code=503, detail="Flash Service não disponível")
+
+    job = flash_service.get_job(flash_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Trabalho de gravação não encontrado")
+
+    return job.to_dict()
+
+
 # ===== FASE 5: Dashboard de Dados em Tempo Real =====
 
 # Rótulos em pt-BR para cada sensor
@@ -794,7 +873,8 @@ async def health_check():
         "status": "ok",
         "mqtt_connected": mqtt_client.is_connected() if mqtt_client else False,
         "influx_connected": influx_client is not None,
-        "firmware_builder_ready": firmware_builder is not None
+        "firmware_builder_ready": firmware_builder is not None,
+        "flash_service_ready": flash_service is not None
     }
 
 
