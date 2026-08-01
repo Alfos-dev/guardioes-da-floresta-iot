@@ -6,9 +6,38 @@ A proposta é oferecer ao pequeno agricultor uma ferramenta acessível e confiá
 
 ---
 
-## v2.0 — Em desenvolvimento
+## ✅ v2.0 — CONCLUÍDO (Em fase de testes)
 
-A **v2.0** evolui o sistema para uma arquitetura **MQTT-first**, na qual todo transporte (serial e Wi-Fi) passa primeiro pelo broker MQTT e um único serviço (`ingest_service`) normaliza e grava os dados. A v1.0 descrita abaixo continua **100% funcional e não foi alterada** — a v2.0 coexiste em paralelo.
+A **v2.0** evolui o sistema para uma arquitetura **MQTT-first**, na qual todo transporte (serial e Wi-Fi) passa primeiro pelo broker MQTT e um único serviço (`ingest_service`) normaliza e grava os dados. 
+
+**Status:** Todas as 6 fases do roadmap foram implementadas e estão funcionais. O sistema está em fase de testes e validação em campo.
+
+A v1.0 descrita abaixo continua **100% funcional e não foi alterada** — a v2.0 coexiste em paralelo.
+
+---
+
+## 🚀 Instalação Rápida — Um Único Comando
+
+Instale todo o sistema Guardiões da Floresta IoT v2.0 automaticamente com:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/main/install.sh | bash
+```
+
+**O instalador faz tudo automaticamente:**
+- ✅ Detecta e instala Docker/Docker Compose (se necessário)
+- ✅ Baixa o código do projeto
+- ✅ Gera credenciais seguras aleatórias
+- ✅ Configura todos os 7 serviços
+- ✅ Inicia o sistema completo
+
+**Após a instalação, acesse:**
+- **Painel de Administração:** `http://IP_DO_SERVIDOR:8000`
+- **Grafana:** `http://IP_DO_SERVIDOR:3000`
+
+Para instalação manual ou troubleshooting, consulte [`INSTALL.md`](INSTALL.md).
+
+---
 
 ### O que as Fases 1-6 entregam
 
@@ -49,24 +78,11 @@ ESP32/ESP8266 (Wi-Fi) -----MQTT------------+                                    
 | `guardioes/{device_id}/config` | servidor → dispositivo | Configuração/calibração (retained, QoS 1) |
 | `guardioes/{device_id}/status` | dispositivo → servidor | Heartbeat `{"online": true}` a cada 30s |
 
-### Instalação rápida (Fase 2 — Instalador automatizado)
+### Instalação Manual (alternativa ao instalador automático)
 
-**Instale todo o stack com um único comando:**
+Para instalação manual ou configurações avançadas, consulte [`INSTALL.md`](INSTALL.md).
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-phase1/install.sh | bash
-```
-
-O instalador irá:
-- Detectar o sistema operacional
-- Instalar Docker e Docker Compose se necessário (Ubuntu/Debian)
-- Baixar o código do projeto (release versionada)
-- Gerar credenciais aleatórias seguras
-- Configurar e iniciar todos os serviços
-
-**Guia completo de instalação:** Consulte [`INSTALL.md`](INSTALL.md) para instruções detalhadas, instalação manual, troubleshooting e comandos úteis.
-
-### Como subir a stack v2 (manual)
+**Passos básicos:**
 
 ```bash
 cp .env.example .env          # defina MQTT_USER / MQTT_PASS e tokens
