@@ -6,17 +6,17 @@ A proposta é oferecer ao pequeno agricultor uma ferramenta acessível e confiá
 
 ---
 
-## ✅ v2.0 — CONCLUÍDO (Em fase de testes)
+## v2.0 — BETA
 
 A **v2.0** evolui o sistema para uma arquitetura **MQTT-first**, na qual todo transporte (serial e Wi-Fi) passa primeiro pelo broker MQTT e um único serviço (`ingest_service`) normaliza e grava os dados. 
 
-**Status:** Todas as 6 fases do roadmap foram implementadas e estão funcionais. O sistema está em fase de testes e validação em campo.
+**Status:** O sistema está em fase de testes e validação em campo.
 
 A v1.0 descrita abaixo continua **100% funcional e não foi alterada** — a v2.0 coexiste em paralelo.
 
 ---
 
-## 🚀 Instalação Rápida — Um Único Comando
+## Instalação Rápida — Um Único Comando
 
 Instale todo o sistema Guardiões da Floresta IoT v2.0 automaticamente com:
 
@@ -25,11 +25,11 @@ curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot
 ```
 
 **O instalador faz tudo automaticamente:**
-- ✅ Detecta e instala Docker/Docker Compose (se necessário)
-- ✅ Baixa o código do projeto
-- ✅ Gera credenciais seguras aleatórias
-- ✅ Configura todos os 7 serviços
-- ✅ Inicia o sistema completo
+- Detecta e instala Docker/Docker Compose (se necessário)
+- Baixa o código do projeto
+- Gera credenciais seguras aleatórias
+- Configura todos os 7 serviços
+- Inicia o sistema completo
 
 **Após a instalação, acesse:**
 - **Painel de Administração:** `http://IP_DO_SERVIDOR:8000`
@@ -39,7 +39,7 @@ Para instalação manual ou troubleshooting, consulte [`INSTALL.md`](INSTALL.md)
 
 ---
 
-### O que as Fases 1-6 entregam
+### O que está sendo entregue
 
 | Componente | Local | Descrição |
 | :--- | :--- | :--- |
@@ -57,7 +57,7 @@ ESP32-S3 (USB) --serial--> serial_bridge --+
 ESP32/ESP8266 (Wi-Fi) -----MQTT------------+                                          +--> SQLite (registro de dispositivos)
 ```
 
-### Schema genérico de telemetria
+### Esquema genérico de telemetria
 
 ```json
 {
@@ -100,8 +100,6 @@ pio run -e esp32s3_v2 -t upload  # grava no ESP32-S3
 ```
 
 > Na primeira inicialização com a NVS vazia, o dispositivo sobe um Wi-Fi `Guardioes-Setup` (192.168.4.1) com um portal para configurar Wi-Fi, broker MQTT e `device_id`.
-
-> **Roadmap:** ~~Fase 1 (MQTT + ingest + firmware modular)~~ ✅, ~~Fase 2 (instalador `curl`)~~ ✅, ~~Fase 3 (painel de administração)~~ ✅, ~~Fase 4 (catálogo de sensores + build sob demanda)~~ ✅, ~~Fase 5 (dashboard de dados em tempo real)~~ ✅, ~~Fase 6 (flash de firmware pelo painel via servidor/USB)~~ ✅. Ver `proposta-tecnica-v2.md`.
 
 ---
 
