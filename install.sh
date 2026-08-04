@@ -177,7 +177,7 @@ check_docker_compose() {
 generate_password() {
     local length=${1:-32}
     # Usa /dev/urandom para gerar senha alfanumérica segura
-    tr -dc 'A-Za-z0-9!@#$%^&*' < /dev/urandom | head -c "$length"
+    tr -dc 'A-Za-z0-9!@#%^&*' < /dev/urandom | head -c "$length"
 }
 
 # Gerar credenciais

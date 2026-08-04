@@ -128,8 +128,8 @@ class FirmwareBuilder:
             "#include <Arduino.h>",
             "#include <WiFi.h>",
             "#include <WebServer.h>",
-            "#include \"lib/config/NvsConfig.h\"",
-            "#include \"lib/transport/MqttTransport.h\"",
+            "#include \"NvsConfig.h\"",
+            "#include \"MqttTransport.h\"",
         ]
         
         # Adiciona headers dos sensores
