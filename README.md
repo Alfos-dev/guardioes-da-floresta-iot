@@ -4,6 +4,21 @@ Sistema de monitoramento ambiental em tempo real desenvolvido para apoiar a agri
 
 A proposta é oferecer ao pequeno agricultor uma ferramenta acessível e confiável para acompanhar as condições do ambiente de cultivo em tempo real, auxiliando na tomada de decisões sobre irrigação, ventilação e manejo da plantação.
 
+> **Release v1.0 (estável)** — este documento descreve exclusivamente a versão 1.x.
+> A **v2.0 (beta, arquitetura MQTT-first)** é publicada e instalada de forma **independente**
+> na sua própria release (`v2.0.0-beta`), com instalador e documentação próprios no `main`.
+
+---
+
+## Instalação Rápida (v1.0)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v1.0.0/install.sh | bash
+```
+
+O instalador detecta/instala o Docker, clona o código da release `v1.0.0`, gera credenciais seguras
+no `.env` e sobe os serviços (InfluxDB, serial_bridge, Grafana, moon_service).
+
 ---
 
 ## 1. Arquitetura do Sistema
@@ -132,9 +147,14 @@ graph TD
 
 ### Passos de Instalação
 
-1.  **Clone o Repositório:**
+> **Instalação automática (recomendada):**
+> ```bash
+> curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v1.0.0/install.sh | bash
+> ```
+
+1.  **Clone o Repositório (release v1.0.0):**
     ```bash
-    git clone https://github.com/Alfos-dev/guardioes-da-floresta-iot.git
+    git clone --branch v1.0.0 --depth 1 https://github.com/Alfos-dev/guardioes-da-floresta-iot.git
     cd guardioes-da-floresta-iot
     ```
 
