@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 #
-# Guardiões da Floresta IoT - Instalador Automatizado v2.0
-# Instalação completa do stack de monitoramento agroecológico
+# Guardiões da Floresta IoT - Instalador Automatizado v2.0 (beta)
+# Instalação completa do stack de monitoramento agroecológico (MQTT-first)
+#
+# A v2 (beta) é instalada de forma independente da v1 (estável). Cada versão é
+# publicada em uma release/tag própria:
+#   - v1.0 (estável): tag v1.0.0, instalador no próprio tag
+#   - v2.0 (beta):    tag v2.0.0-beta.1 (este instalador)
 #
 # Uso:
-#   curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-phase1/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-beta.1/install.sh | bash
 #   ou localmente: ./install.sh
 #
 
@@ -20,7 +25,7 @@ NC='\033[0m' # No Color
 
 # Configurações
 INSTALL_DIR="${INSTALL_DIR:-$HOME/guardioes-iot}"
-RELEASE_TAG="${RELEASE_TAG:-v2.0.0-phase1}"
+RELEASE_TAG="${RELEASE_TAG:-v2.0.0-beta.1}"
 REPO_URL="https://github.com/Alfos-dev/guardioes-da-floresta-iot"
 MIN_DOCKER_VERSION="20.10"
 MIN_COMPOSE_VERSION="2.0"

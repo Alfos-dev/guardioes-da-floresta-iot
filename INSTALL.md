@@ -22,7 +22,7 @@ Este documento descreve o processo completo de instalação do sistema Guardiõe
 Execute o seguinte comando em um terminal:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-phase1/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-beta.1/install.sh | bash
 ```
 
 **O que o instalador faz:**
@@ -42,7 +42,7 @@ Por padrão, o instalador cria o diretório `~/guardioes-iot`. Para usar outro l
 
 ```bash
 export INSTALL_DIR=/caminho/desejado
-curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-phase1/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-beta.1/install.sh | bash
 ```
 
 ### Usar uma versão específica
@@ -50,7 +50,7 @@ curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot
 Para instalar uma release específica:
 
 ```bash
-export RELEASE_TAG=v2.0.0-phase2
+export RELEASE_TAG=v2.0.0-beta.1
 curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/$RELEASE_TAG/install.sh | bash
 ```
 
@@ -92,7 +92,7 @@ newgrp docker
 
 ```bash
 cd ~
-git clone --branch v2.0.0-phase1 https://github.com/Alfos-dev/guardioes-da-floresta-iot.git guardioes-iot
+git clone --branch v2.0.0-beta.1 https://github.com/Alfos-dev/guardioes-da-floresta-iot.git guardioes-iot
 cd guardioes-iot
 ```
 
@@ -239,7 +239,7 @@ docker compose down -v
 ```bash
 cd ~/guardioes-iot
 git fetch --tags
-git checkout v2.0.0-phase2  # nova versão
+git checkout v2.0.0-beta.1  # nova versão
 docker compose pull
 docker compose up -d
 ```

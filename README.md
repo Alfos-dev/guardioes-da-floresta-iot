@@ -6,13 +6,27 @@ A proposta é oferecer ao pequeno agricultor uma ferramenta acessível e confiá
 
 ---
 
+## Releases / Versões
+
+As versões são publicadas de forma **independente**, cada uma com seu próprio
+instalador e documentação:
+
+| Versão | Status | Tag / Branch | Instalação |
+| :--- | :--- | :--- | :--- |
+| **v1.0** | Estável | `v1.0.0` / `release/v1` | `curl -fsSL .../v1.0.0/install.sh \| bash` |
+| **v2.0** (este documento) | Beta | `v2.0.0-beta.1` / `main` | `curl -fsSL .../v2.0.0-beta.1/install.sh \| bash` |
+
+> A v1.0 (estável) continua **100% funcional** e é instalada sem nenhum código
+> da v2. Os arquivos legados da v1 foram movidos para `legacy/` apenas como
+> referência — o código canônico da v1 vive na branch `release/v1`.
+
+---
+
 ## v2.0 — BETA
 
 A **v2.0** evolui o sistema para uma arquitetura **MQTT-first**, na qual todo transporte (serial e Wi-Fi) passa primeiro pelo broker MQTT e um único serviço (`ingest_service`) normaliza e grava os dados. 
 
 **Status:** O sistema está em fase de testes e validação em campo.
-
-A v1.0 descrita abaixo continua **100% funcional e não foi alterada** — a v2.0 coexiste em paralelo.
 
 ---
 
@@ -21,7 +35,7 @@ A v1.0 descrita abaixo continua **100% funcional e não foi alterada** — a v2.
 Instale todo o sistema Guardiões da Floresta IoT v2.0 automaticamente com:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/Alfos-dev/guardioes-da-floresta-iot/v2.0.0-beta.1/install.sh | bash
 ```
 
 **O instalador faz tudo automaticamente:**
@@ -104,6 +118,11 @@ pio run -e esp32s3_v2 -t upload  # grava no ESP32-S3
 ---
 
 ## 1. Arquitetura do Sistema (v1.0)
+
+> As seções 1–8 abaixo documentam a **v1.0 (estável)**, mantidas aqui como
+> referência de hardware e conceitos. Para instalar e documentar a v1, use a
+> release [`v1.0.0`](https://github.com/Alfos-dev/guardioes-da-floresta-iot/releases/tag/v1.0.0)
+> (branch `release/v1`). O código da v1 está em `legacy/`.
 
 O sistema **Guardiões da Floresta** opera de forma autônoma e local, garantindo o monitoramento contínuo das condições ambientais sem a necessidade de conexão com a internet. A arquitetura é modular e baseada em contêineres Docker, facilitando a implantação e o gerenciamento.
 
@@ -229,9 +248,9 @@ graph TD
 
 ### Passos de Instalação
 
-1.  **Clone o Repositório:**
+1.  **Clone o Repositório (release v1.0.0):**
     ```bash
-    git clone https://github.com/Alfos-dev/guardioes-da-floresta-iot.git
+    git clone --branch v1.0.0 --depth 1 https://github.com/Alfos-dev/guardioes-da-floresta-iot.git
     cd guardioes-da-floresta-iot
     ```
 
@@ -251,9 +270,10 @@ graph TD
 
 ## 5. Firmware ESP32
 
-O firmware é desenvolvido no PlatformIO.
+O firmware v1 é desenvolvido no PlatformIO (pasta `legacy/` no `main`, ou `src/`
++ `platformio.ini` na release `v1.0.0`).
 
-1.  **Abra a pasta `src/`** no VS Code com a extensão PlatformIO.
+1.  **Abra a pasta `legacy/`** no VS Code com a extensão PlatformIO.
 2.  **Compile e faça o Upload** para o ESP32 conectado.
 3.  **Monitore a Serial** (115200 baud) para verificar o envio do JSON.
 

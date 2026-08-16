@@ -1,7 +1,8 @@
 # Firmware v2.0 — Guardiões da Floresta
 
-Firmware modular, MQTT-first, para o nó sensor da v2.0. Convive com o firmware
-v1.0 que permanece na raiz do repositório (`src/`, `platformio.ini`).
+Firmware modular, MQTT-first, para o nó sensor da v2.0. O firmware v1.0
+(estável) é publicado de forma independente na release `v1.0.0` (branch
+`release/v1`); no `main` seu código fica em `legacy/` apenas como referência.
 
 ## Placas Suportadas
 
